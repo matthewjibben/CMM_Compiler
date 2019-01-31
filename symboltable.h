@@ -28,6 +28,7 @@ void deleteSym(struct Symbol* sym){
     free(sym->value);
     free(sym);
 }
+
 // =======================   Symbol    =======================
 
 // ======================= Environment =======================
@@ -124,6 +125,11 @@ void printEnv(struct Env* env){
         printf("%s\t%s\t%s\n", temp->id, temp->type, temp->value);
         temp = temp->next;
     }
+}
+
+void updateVal(struct Symbol* sym, char* newval){
+    free(sym->value);
+    sym->value = newval;
 }
 
 // ======================= Environment =======================
