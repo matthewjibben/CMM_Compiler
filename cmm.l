@@ -1,9 +1,13 @@
 %option noyywrap nodefault yylineno
 %{
 #include "tokens.h"
+#include "symboltable.h"
 
 int chars = 0;
-int lines = 0;
+
+// initialize the global environment
+struct Env* env;
+initEnv(&env, NULL);
 
 /* adjust function, updates the chars value based on the lexeme */
 void adjust(){
@@ -52,6 +56,7 @@ string                  { adjust(); return STRING; }
 
 "{"                     { adjust(); return LBRACK; }
 "}"                     { adjust(); return RBRACK; }
+
 "("                     { adjust(); return LPAREN; }
 ")"		                { adjust(); return RPAREN; }
 
@@ -107,7 +112,7 @@ int main(int argc, char **argv)
     }
 
 
-    printf("Lines: %8d chars: %8d\n", lines, chars);
+    printf("chars: %8d\n", chars);
     printf("yylineno: %i\n", yylineno);
     printf("\n");
 }
