@@ -5,9 +5,8 @@
 
 int chars = 0;
 
-// initialize the global environment
+// declare the global environment
 struct Env* env;
-initEnv(&env, NULL);
 
 /* adjust function, updates the chars value based on the lexeme */
 void adjust(){
@@ -54,8 +53,28 @@ char		            { adjust(); return CHAR; }
 string                  { adjust(); return STRING; }
 
 
-"{"                     { adjust(); return LBRACK; }
-"}"                     { adjust(); return RBRACK; }
+"{"                     { adjust();
+
+                          // create new environment and enter it
+                          struct Env* temp = malloc(sizeof(struct Env));
+                          initEnv(temp, env);
+                          env = temp;
+                          printf("entering new scope...\n");
+
+                          return LBRACK; }
+"}"                     { adjust();
+
+                          //print the environment and then delete it
+                          printf("exiting environment:\n");
+                          printEnv(env);
+
+                          //deleting
+                          struct Env* temp = malloc(sizeof(struct Env));
+                          temp = env;
+                          env = env->prev;
+                          freeEnv(temp);
+
+                          return RBRACK; }
 
 "("                     { adjust(); return LPAREN; }
 ")"		                { adjust(); return RPAREN; }
@@ -76,8 +95,7 @@ string                  { adjust(); return STRING; }
 ">"                             { adjust(); return GT; }
 "!="		                    { adjust(); return NE; }
 
-{id}		                    { adjust(); return ID;
-			                    /* lookup if the item exists in the symbol table, if not then create it */ }
+{id}		                    { adjust(); return ID; }
 
 {number}	                    { adjust();return INT; }
 "="		                        { adjust();return ASSIGN; }
@@ -92,11 +110,20 @@ string                  { adjust(); return STRING; }
 
 int main(int argc, char **argv)
 {
+    // initialize the global environment using malloc
+    env = malloc(sizeof(struct Env));
+    initEnv(env, NULL);
+
     int tok=yylex();
     while (tok!=0) {
         switch(tok){
             case ID:
                 printf("<ID, %s>\n", yytext);
+                /* lookup if the item exists in the symbol table, if not then create it */
+                /* for the lexer, I will only add the item to the symbol table */
+                printf("inserting...\n");
+                char* temp = strdup(yytext);
+                insertEntry(env, temp, NULL, NULL);
                 break;
             case INT:
                 printf("<INT, %s>\n", yytext);
@@ -110,6 +137,9 @@ int main(int argc, char **argv)
         //printf("<chars: %i>\n", yyleng);
         tok=yylex();
     }
+
+    printf("finished, show global environment: \n");
+    printEnv(env);
 
 
     printf("chars: %8d\n", chars);

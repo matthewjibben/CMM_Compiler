@@ -1,6 +1,6 @@
-cmm:  cmm.l sample.cmm
+cmm:  cmm.l tokens.h symboltable.h symboltable.c sample.cmm
 	flex cmm.l
-	cc lex.yy.c -lfl
+	cc lex.yy.c symboltable.c -lfl
 	./a.out < sample.cmm
 	make clean
 

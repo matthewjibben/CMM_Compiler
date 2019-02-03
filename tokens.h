@@ -81,7 +81,9 @@ char* tokennames[] = {
     "DIV",
     "MULT",
     "SEMICOLON",
-    "MOD"
+    "MOD",
+    "STRING",
+    "STR"
 };
 
 char* getTokName(int token){
