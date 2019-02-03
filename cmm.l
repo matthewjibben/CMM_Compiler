@@ -1,8 +1,17 @@
+%option noyywrap nodefault yylineno
 %{
+#include "tokens.h"
+
 int chars = 0;
-int words = 0;
 int lines = 0;
+
+/* adjust function, updates the chars value based on the lexeme */
+void adjust(){
+    chars += yyleng;
+}
+
 %}
+
 /*
 ======= RE CHEAT SHEET =======
 
@@ -24,27 +33,53 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 
 
 %%
+\s		{ adjust(); /* whitespace, do nothing */ }
 
-\s		{ /* whitespace, do nothing */ }
-if|else|while|print|println	{ printf("<%s> ", yytext); chars+=strlen(yytext); /* statements */ }
-int|char|string		{ printf("<type, %s> ", yytext); chars+=strlen(yytext); /* datatypes */ }
-\{|\}|\(|\)		{ printf("<%s> ",yytext); chars++; /* containers */ }
-\+|\-|\/|\*|%		{ printf("<%s> ", yytext); chars++; /* arithmetic */ }
-";"		{ printf("<;> "); chars++; }
-={2}		{ printf("<EQ> "); chars+=2; }
-"<="		{ printf("<LE> "); chars++; }
-">="		{ printf("<GE> "); chars++; } 
-"<"             { printf("<LT> "); chars++; } 
-">"             { printf("<GT> "); chars++; } 
-"!="		{ printf("<NE> "); chars+=2; }
+\"(.*?)\"       { adjust(); return STR; }
 
-{id}		{ printf("<id, \"%s\"> ", yytext); chars+=strlen(yytext); 
-			/* lookup if the item exists in the symbol table, if not then create it */ }
-{number}	{ printf("<num, %s> ", yytext); chars+=strlen(yytext); }
-=		{ printf("<assign> "); chars++; }
 
-\n		{ chars++; lines++; }
-.		{ chars++; }
+if              { adjust(); return IF; }
+else            { adjust(); return ELSE; }
+while           { adjust(); return WHILE; }
+write           { adjust(); return WRITE; }
+writeln         { adjust(); return WRITELN; }
+
+
+int                     { adjust(); return INT; }
+char		            { adjust(); return CHAR; }
+string                  { adjust(); return STRING; }
+
+
+"{"                     { adjust(); return LBRACK; }
+"}"                     { adjust(); return RBRACK; }
+"("                     { adjust(); return LPAREN; }
+")"		                { adjust(); return RPAREN; }
+
+
+"+"                     { adjust(); return ADD; }
+"-"                     { adjust(); return SUB; }
+"/"                     { adjust(); return DIV; }
+"*"                     { adjust(); return MULT; }
+"%"		                { adjust(); return MOD; }
+
+";"		                        { adjust(); return SEMICOLON; }
+
+"=="		                    { adjust(); return EQ; }
+"<="		                    { adjust(); return LE; }
+">="		                    { adjust(); return GE; }
+"<"                             { adjust(); return LT; }
+">"                             { adjust(); return GT; }
+"!="		                    { adjust(); return NE; }
+
+{id}		                    { adjust(); return ID;
+			                    /* lookup if the item exists in the symbol table, if not then create it */ }
+
+{number}	                    { adjust();return INT; }
+"="		                        { adjust();return ASSIGN; }
+
+
+\n		{ adjust(); }
+.		{ adjust(); }
 
 
 
@@ -52,7 +87,27 @@ int|char|string		{ printf("<type, %s> ", yytext); chars+=strlen(yytext); /* data
 
 int main(int argc, char **argv)
 {
-  yylex();
-  //printf("%8d%8d%8d\n",lines, words, chars);
-  printf("\n");
+    int tok=yylex();
+    while (tok!=0) {
+        switch(tok){
+            case ID:
+                printf("<ID, %s>\n", yytext);
+                break;
+            case INT:
+                printf("<INT, %s>\n", yytext);
+                break;
+            case STR:
+                printf("<STR, %s>\n", yytext);
+                break;
+            default:
+                printf("<%s>\n", getTokName(tok));
+        }
+        //printf("<chars: %i>\n", yyleng);
+        tok=yylex();
+    }
+
+
+    printf("Lines: %8d chars: %8d\n", lines, chars);
+    printf("yylineno: %i\n", yylineno);
+    printf("\n");
 }
