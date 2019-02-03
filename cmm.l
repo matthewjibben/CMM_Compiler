@@ -16,7 +16,7 @@ void adjust(){
 %}
 
 /*
-======= RE CHEAT SHEET =======
+======= RE CHEAT SHEET ========
 
 .	Any character except newline
 \w	word
@@ -25,8 +25,9 @@ void adjust(){
 (capital /W, /D, /S stand for Not word, digit, or whitespace)
 ^	start of string or line
 $	end of string or line 
-
+===============================
 */
+
 /* regular definitions */
 
 letter	[A-Za-z]
@@ -102,7 +103,7 @@ string                  { adjust(); return STRING; }
 
 
 \n		{ adjust(); }
-.		{ adjust(); }
+.		{ adjust(); printf("unknown character on line %i\n", yylineno); }
 
 
 

@@ -40,7 +40,6 @@ enum yytokentype
     LPAREN  =   278,
     RPAREN  =   279,
 
-    /* Other */
     ADD     =   280,
     SUB     =   281,
     DIV     =   282,
