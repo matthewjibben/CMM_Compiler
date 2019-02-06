@@ -48,7 +48,14 @@ enum yytokentype
     MOD     =   285,
 
     STRING  =   286,
-    STR     =   287
+    CHARARRAY     =   287,
+    LSQUARE =   288,
+    RSQUARE =   289,
+    COMMA   =   290,
+    NUMBER  =   291,
+    NOT     =   292,
+    AND     =   293,
+    OR      =   294
 };
 
 char* tokennames[] = {
@@ -82,7 +89,14 @@ char* tokennames[] = {
     "SEMICOLON",
     "MOD",
     "STRING",
-    "STR"
+    "CHARARRAY",
+    "LSQUARE",
+    "RSQUARE",
+    "COMMA",
+    "NUMBER",
+    "NOT",
+    "AND",
+    "OR"
 };
 
 char* getTokName(int token){

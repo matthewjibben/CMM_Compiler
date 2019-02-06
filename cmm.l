@@ -1,7 +1,10 @@
 %option noyywrap nodefault yylineno
 %{
-#include "tokens.h"
+#include "cmm.tab.h"
+//#include "tokens.h"
 #include "symboltable.h"
+
+
 
 int chars = 0;
 
@@ -37,9 +40,9 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 
 
 %%
-\s		{ adjust(); /* whitespace, do nothing */ }
+[ \t]+  		{ adjust(); /* whitespace, do nothing */}
 
-\"(.*?)\"       { adjust(); return STR; }
+\"(.*?)\"       { adjust(); return CHARARRAY; }
 
 
 if              { adjust(); return IF; }
@@ -80,6 +83,8 @@ string                  { adjust(); return STRING; }
 "("                     { adjust(); return LPAREN; }
 ")"		                { adjust(); return RPAREN; }
 
+"["                     { adjust(); return LSQUARE; }
+"]"                     { adjust(); return RSQUARE; }
 
 "+"                     { adjust(); return ADD; }
 "-"                     { adjust(); return SUB; }
@@ -88,6 +93,7 @@ string                  { adjust(); return STRING; }
 "%"		                { adjust(); return MOD; }
 
 ";"		                        { adjust(); return SEMICOLON; }
+","                             { adjust(); return COMMA; }
 
 "=="		                    { adjust(); return EQ; }
 "<="		                    { adjust(); return LE; }
@@ -96,9 +102,14 @@ string                  { adjust(); return STRING; }
 ">"                             { adjust(); return GT; }
 "!="		                    { adjust(); return NE; }
 
+"!"                             { adjust(); return NOT; }
+"&&"                             { adjust(); return AND; }
+"||"                             { adjust(); return OR; }
+
+
 {id}		                    { adjust(); return ID; }
 
-{number}	                    { adjust();return INT; }
+{number}	                    { adjust();return NUMBER; }
 "="		                        { adjust();return ASSIGN; }
 
 
@@ -109,41 +120,50 @@ string                  { adjust(); return STRING; }
 
 %%
 
-int main(int argc, char **argv)
-{
-    // initialize the global environment using malloc
-    env = malloc(sizeof(struct Env));
-    initEnv(env, NULL);
+//int main(int argc, char **argv)
+//{
+//    printf("> ");
+//    printf("================================================================================\n");
+//    printf("================================================================================\n");
+//    printf("================================================================================\n");
+//    //return yyparse();
+//}
 
-    int tok=yylex();
-    while (tok!=0) {
-        switch(tok){
-            case ID:
-                printf("<ID, %s>\n", yytext);
-                /* lookup if the item exists in the symbol table, if not then create it */
-                /* for the lexer, I will only add the item to the symbol table */
-                printf("inserting...\n");
-                char* temp = strdup(yytext);
-                insertEntry(env, temp, NULL, NULL);
-                break;
-            case INT:
-                printf("<INT, %s>\n", yytext);
-                break;
-            case STR:
-                printf("<STR, %s>\n", yytext);
-                break;
-            default:
-                printf("<%s>\n", getTokName(tok));
-        }
-        //printf("<chars: %i>\n", yyleng);
-        tok=yylex();
-    }
-
-    printf("finished, show global environment: \n");
-    printEnv(env);
-
-
-    printf("chars: %8d\n", chars);
-    printf("yylineno: %i\n", yylineno);
-    printf("\n");
-}
+//int main(int argc, char **argv)
+//{
+//    // initialize the global environment using malloc
+//    env = malloc(sizeof(struct Env));
+//    initEnv(env, NULL);
+//
+//    int tok=yylex();
+//    while (tok!=0) {
+//        switch(tok){
+//            case ID:
+//                printf("<ID, %s>\n", yytext);
+//                /* lookup if the item exists in the symbol table, if not then create it */
+//                /* for the lexer, I will only add the item to the symbol table */
+//                printf("inserting...\n");
+//                char* temp = strdup(yytext);
+//                insertEntry(env, temp, NULL, NULL);
+//                break;
+//            case NUMBER:
+//                printf("<NUMBER, %s>\n", yytext);
+//                break;
+//            case CHARARRAY:
+//                printf("<CHARARRAY, %s>\n", yytext);
+//                break;
+//            default:
+//                printf("<%s>\n", getTokName(tok));
+//        }
+//        //printf("<chars: %i>\n", yyleng);
+//        tok=yylex();
+//    }
+//
+//    printf("finished, show global environment: \n");
+//    printEnv(env);
+//
+//
+//    printf("chars: %8d\n", chars);
+//    printf("yylineno: %i\n", yylineno);
+//    printf("\n");
+//}

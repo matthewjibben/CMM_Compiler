@@ -1,0 +1,7 @@
+string x = "example";
+int y = 5 + 4;
+if( y == 9 ) {
+    int a = 3;
+    int c = 34;
+    string mystr = "1234abcd";
+}
