@@ -1,7 +1,12 @@
-string x = "example";
-int y = 5 + 4;
-if( y == 9 ) {
-    int a = 3;
-    int c = 34;
-    string mystr = "1234abcd";
+int main() {
+    int x = 123;
+    int b;
+    z = 234;
+    char x;
+    c = myfunc();
+    extra = (1 * 2) + 5 / n;
+    2 > 3;
+    if ( g == 7 ) {
+
+    }
 }

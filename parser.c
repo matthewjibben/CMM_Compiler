@@ -11,8 +11,9 @@ extern FILE* yyin;
 
 int main(int argc, char **argv)
 {
+    printf("=========================parser.c===============================================\n");
     //open the input sample cmm file
-    if((yyin = fopen("./sample2.cmm","r"))==NULL){
+    if((yyin = fopen("./sample.cmm","r"))==NULL){
         printf("Failed to read file");
         exit(1);
     }
@@ -20,18 +21,14 @@ int main(int argc, char **argv)
         printf("file correctly opened\n");
     }
 
-
-    printf("=========================parser.c===============================================\n");
-
     //int c;
     //while((c=getc(yyin))!=EOF){
     //    putchar(c);
     //}
 
+
     printf("\n\nyyparse: %i\n", yyparse());
-
     fclose(yyin);
-
     printf("exit\n\n");
     return 0;
 }

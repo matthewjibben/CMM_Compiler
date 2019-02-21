@@ -1,9 +1,8 @@
-%option noyywrap nodefault yylineno
 %{
 #include "cmm.tab.h"
 //#include "tokens.h"
 #include "symboltable.h"
-
+#include "lval.h"
 
 
 int chars = 0;
@@ -17,6 +16,8 @@ void adjust(){
 }
 
 %}
+%option noyywrap nodefault yylineno
+%option bison-locations
 
 /*
 ======= RE CHEAT SHEET ========
@@ -40,8 +41,10 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 
 
 %%
-[ \t]+  		{ adjust(); /* whitespace, do nothing */}
+[ \s]+  		{ adjust(); /* whitespace, do nothing */}
 
+
+\"(.)\"         { adjust(); return SINGLECHAR; }
 \"(.*?)\"       { adjust(); return CHARARRAY; }
 
 
@@ -52,7 +55,7 @@ write           { adjust(); return WRITE; }
 writeln         { adjust(); return WRITELN; }
 
 
-int                     { adjust(); return INT; }
+int                     { adjust(); /* yylval->intval = 103; */ return INT; }
 char		            { adjust(); return CHAR; }
 string                  { adjust(); return STRING; }
 
@@ -92,7 +95,7 @@ string                  { adjust(); return STRING; }
 "*"                     { adjust(); return MULT; }
 "%"		                { adjust(); return MOD; }
 
-";"		                        { adjust(); return SEMICOLON; }
+;		                        { adjust(); return SEMICOLON; }
 ","                             { adjust(); return COMMA; }
 
 "=="		                    { adjust(); return EQ; }
@@ -107,18 +110,24 @@ string                  { adjust(); return STRING; }
 "||"                             { adjust(); return OR; }
 
 
-{id}		                    { adjust(); return ID; }
+{id}		                    { adjust();  return ID; }
 
 {number}	                    { adjust();return NUMBER; }
 "="		                        { adjust();return ASSIGN; }
 
 
-\n		{ adjust(); }
-.		{ adjust(); printf("unknown character on line %i\n", yylineno); }
+\n		{ adjust(); chars = 0; }
+.		{ adjust(); } // int x = (int)yytext[0]; printf("unknown character on line %i, index: %i, asciival: %i\n", yylineno, chars, x); }
 
 
 
 %%
+
+void yyerror(const char *s){
+    fprintf(stderr, "ERROR line %i, character: %i: %s\n", yylineno, chars, s);
+    printf("current word: %s", yytext);
+}
+
 
 //int main(int argc, char **argv)
 //{

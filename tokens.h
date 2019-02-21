@@ -7,10 +7,11 @@
 
 #include <stdio.h>
 
+/* File no longer needed
 enum yytokentype
 {
     ID      =   257,
-    /* reserved words */
+    //reserved words
     INT     =   258,
     CHAR    =   259,
 
@@ -20,12 +21,12 @@ enum yytokentype
     WHILE   =   263,
 
     WRITE   =   264,
-    WRITELN   =   265,
+    WRITELN =   265,
     READ    =   266,
     RETRN   =   267,
     BREAK   =   268,
 
-    /* Comparisons */
+    // Comparisons
     EQ      =   269,
     LE      =   270,
     GE      =   271,
@@ -33,8 +34,8 @@ enum yytokentype
     GT      =   273,
     NE      =   274,
 
-    /* Others */
-    ASSIGN   =   275,
+    // Others
+    ASSIGN  =   275,
     LBRACK  =   276,
     RBRACK  =   277,
     LPAREN  =   278,
@@ -103,6 +104,6 @@ char* getTokName(int token){
     return tokennames[token-257];
 }
 
-
+*/
 
 #endif //TOKENS_H
