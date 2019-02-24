@@ -41,8 +41,8 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 
 
 %%
-[ \s]+  		{ adjust(); /* whitespace, do nothing */}
-
+[ \t\r\n\f]  		{ adjust(); /* whitespace, do nothing */ }
+\/[\/]+.*           { adjust(); /* code comment, do nothing */ }
 
 \"(.)\"         { adjust(); return SINGLECHAR; }
 \"(.*?)\"       { adjust(); return CHARARRAY; }
@@ -51,11 +51,12 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 if              { adjust(); return IF; }
 else            { adjust(); return ELSE; }
 while           { adjust(); return WHILE; }
+read            { adjust(); return READ; }
 write           { adjust(); return WRITE; }
 writeln         { adjust(); return WRITELN; }
+return          { adjust(); return RETRN; }
 
-
-int                     { adjust(); /* yylval->intval = 103; */ return INT; }
+int                     { adjust(); return INT; }
 char		            { adjust(); return CHAR; }
 string                  { adjust(); return STRING; }
 

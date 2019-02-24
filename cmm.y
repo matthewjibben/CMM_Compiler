@@ -96,8 +96,8 @@ Stmt			: SEMICOLON
 			| WhileStmt
 			| IfStmt
 			;
-RetrnStmt		: RETRN Expr SEMICOLON
-			| RETRN SEMICOLON
+RetrnStmt		: RETRN Expr SEMICOLON			{ printf("we have a return"); }
+			| RETRN SEMICOLON			{ printf("we have a return"); }
 			;
 WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
 			;
@@ -129,7 +129,7 @@ Primary			: ID					{ printf("there is an ID\n"); }
 SimpleExpr		: AddExpr RelOp AddExpr
 			| AddExpr
 			;
-RelOp			: EQ | LE | GE | LT | GT | NE
+RelOp			: EQ | LE | GE | LT | GT | NE | AND | OR
 			;
 AddExpr			: AddExpr AddOp Term
 			| Term
