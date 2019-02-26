@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 // =======================   Symbol    =======================
-struct Symbol {
+typedef struct Symbol {
     // the 2d array includes 3 elements in each row:
     // 0: identifier
     // 1: type
@@ -20,18 +20,18 @@ struct Symbol {
     //I use a doubly linked list of symbols so that deletion is easier
     struct Symbol* next;
     struct Symbol* prev;
-};
+} Symbol;
 
 void deleteSym(struct Symbol* sym);
 // =======================   Symbol    =======================
 
 // ======================= Environment =======================
-struct Env {
+typedef struct Env{
     int size;
     struct Symbol* head;    // head of the linked list of symbols
     struct Symbol* tail;
     struct Env* prev;
-};
+} Env ;
 
 void initEnv(struct Env* env, struct Env* previous);
 int insertEntry(struct Env* env, char* id, char* type, char* value);

@@ -2,13 +2,13 @@
 #include "cmm.tab.h"
 //#include "tokens.h"
 #include "symboltable.h"
-#include "lval.h"
+//#include "lval.h"
 
 
 int chars = 0;
 
 // declare the global environment
-struct Env* env;
+Env* env;
 
 /* adjust function, updates the chars value based on the lexeme */
 void adjust(){
@@ -118,11 +118,12 @@ string                  { adjust(); return STRING; }
 
 
 \n		{ adjust(); chars = 0; }
-.		{ adjust(); } // int x = (int)yytext[0]; printf("unknown character on line %i, index: %i, asciival: %i\n", yylineno, chars, x); }
-
+.		{ adjust(); /* int x = (int)yytext[0]; printf("unknown character on line %i, index: %i, asciival: %i\n", yylineno, chars, x); */ }
 
 
 %%
+
+
 
 void yyerror(const char *s){
     fprintf(stderr, "ERROR line %i, character: %i: %s\n", yylineno, chars, s);
