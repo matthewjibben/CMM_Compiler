@@ -1,8 +1,6 @@
 %{
-#include "cmm.tab.h"
-//#include "tokens.h"
 #include "symboltable.h"
-//#include "lval.h"
+#include "cmm.tab.h"
 
 
 int chars = 0;
@@ -16,8 +14,9 @@ void adjust(){
 }
 
 %}
+
 %option noyywrap nodefault yylineno
-%option bison-locations
+/* %option bison-locations This causes issues with yylval, do not use*/
 
 /*
 ======= RE CHEAT SHEET ========
@@ -41,11 +40,11 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 
 
 %%
-[ \t\r\n\f]  		{ adjust(); /* whitespace, do nothing */ }
+[ \t\r\f]  		{ adjust(); /* whitespace, do nothing */ }
 \/[\/]+.*           { adjust(); /* code comment, do nothing */ }
 
-\"(.)\"         { adjust(); return SINGLECHAR; }
-\"(.*?)\"       { adjust(); return CHARARRAY; }
+\"(.)\"         { adjust(); yylval.sval = strdup(yytext); return SINGLECHAR; }
+\"(.*?)\"       { adjust(); yylval.sval = strdup(yytext); return CHARARRAY; }
 
 
 if              { adjust(); return IF; }
@@ -111,9 +110,13 @@ string                  { adjust(); return STRING; }
 "||"                             { adjust(); return OR; }
 
 
-{id}		                    { adjust();  return ID; }
+{id}		                    { adjust();
+                                    yylval.sval = strdup(yytext);
+                                    return ID; }
 
-{number}	                    { adjust();return NUMBER; }
+{number}	                    { adjust();
+                                    yylval.ival = atoi(yytext);
+                                    return NUMBER; }
 "="		                        { adjust();return ASSIGN; }
 
 

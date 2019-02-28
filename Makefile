@@ -1,7 +1,7 @@
-cmm:  cmm.l cmm.y tokens.h symboltable.c sample.cmm parser.c
+cmm:  cmm.l cmm.y tokens.h symboltable.c sample.cmm parser.c ast.h ast.c
 	bison -d cmm.y
 	flex cmm.l
-	cc -g -o cmm parser.c symboltable.c cmm.tab.c lex.yy.c -lm
+	cc -g -o cmm parser.c symboltable.c ast.c cmm.tab.c lex.yy.c -lm
 	./cmm
 	make clean
 

@@ -1,6 +1,6 @@
 string myfunc(int a, string b, char c){
     write x;
-    if(assdf > 1){
+    if(myVar > 1){
         write "hi";
     }
     else {
@@ -13,6 +13,7 @@ string myfunc(int a, string b, char c){
     int x[12];
     int y[10];
     y[2] = 123;
+    int myint = 123;
     x[1] = "asdf";
     runFunction(123, asdf, "input");
     // comments?
@@ -22,8 +23,8 @@ string myfunc(int a, string b, char c){
 int main() {
     string x;
     int xyz = "123";
-    int x = 123;
-    int b;
+    //int x = 123;
+    //int b;
     z = 234;
     char x;
     c = myfunc();

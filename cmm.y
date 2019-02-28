@@ -1,8 +1,8 @@
 %{
 #include <stdio.h>
-//#include "lval.h"
+#include <stdlib.h>
 #define YYDEBUG 1
-//#define YYSTYPE double
+#include "ast.h"
 
 int yylex(void);
 void yyerror(const char *);
@@ -12,7 +12,11 @@ void yyerror(const char *);
     int ival;
     char* sval;
     double value;
+    struct Expression* expr;
+    struct Statement* stmt;
+    struct Declaration* decl;
 }
+
 
 /* token declarations */
 %error-verbose
@@ -29,14 +33,18 @@ void yyerror(const char *);
 %token LBRACK RBRACK LPAREN RPAREN LSQUARE RSQUARE
 %token INT
 %token CHAR STRING
-%token CHARARRAY SINGLECHAR
-%token NUMBER
+%token <sval> CHARARRAY SINGLECHAR
+%token <ival> NUMBER
 %token IF THEN ELSE WHILE
 %token WRITE WRITELN READ RETRN BREAK
 %token ASSIGN MOD //ADD SUB DIV MULT MOD
 
 %type <ival> Type
-%type <ival> VarDec
+%type <decl> VarDec FunDec
+
+%type <expr> Expr Primary Factor Term SimpleExpr Var
+
+%type <sval> AddOp MulOp RelOp
 
 %left AND OR
 %right NOT
@@ -47,7 +55,7 @@ void yyerror(const char *);
 // %type<intval> INT
 %%
 /* new grammar rules */
-progam			: DecList			{ printf("program complete\n"); }
+progam			: DecList			{ printf("\nprogram rule completed\n"); }
 			;
 DecList			: DecList Declaration
 			| /* epsilon */
@@ -56,12 +64,25 @@ Declaration		: VarDec
 			| FunDec
 			;
 VarDec			: Type ID SEMICOLON
+				{
+				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
+				}
 			| Type ID ASSIGN Expr SEMICOLON
+				{
+					//printf("There is a variable declaration\n\n");
+					$$ = newDeclaration($2, false, $1, NULL, $4, NULL, NULL, NULL);
+					printExpression($4);
+					printf("===========%s\n", $$->name);
+					//printf(">>>>>>>>>>>>>>>>>%s<<<<<<<<<<<<<<<<<<<<<<<<<<", $2);
+				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
+				{
+                        	//$$ = newDeclaration($2, true, $1, NULL, NULL, NULL, NULL, NULL);
+                        	}
 			;
-Type			: INT
-			| CHAR
-			| STRING
+Type			: INT		{ $$ = INT; }
+			| CHAR		{ $$ = CHAR; }
+			| STRING	{ $$ = STRING; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN Block
 			;
@@ -95,57 +116,107 @@ Stmt			: SEMICOLON
 			| RetrnStmt
 			| WhileStmt
 			| IfStmt
+			| Var ASSIGN Expr
 			;
-RetrnStmt		: RETRN Expr SEMICOLON			{ printf("we have a return"); }
-			| RETRN SEMICOLON			{ printf("we have a return"); }
+RetrnStmt		: RETRN Expr SEMICOLON			{ }//printf("we have a return"); }
+			| RETRN SEMICOLON			{ }//printf("we have a return"); }
 			;
 WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
 			;
 IfStmt			: IF LPAREN Expr RPAREN Stmt
 			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
 			;
-Expr			: Primary
+Expr			: Primary		{ $$ = $1; }
 			| UnaryOp Expr
 			| Expr RelOp Expr
-			| Var ASSIGN Expr
+				{
+				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
+				printExpression($$);
+				}
 			| Call
 			| SimpleExpr
+				{
+				$$ = $1; //newExpression(INT, NULL, NULL, "simple", NULL, "very simple");
+				}
 			;
 UnaryOp			: SUB
 			| NOT
 			;
-Var			: ID
-			| ID LSQUARE Expr RSQUARE
-			;
-Primary			: ID					{ printf("there is an ID\n"); }
-			| NUMBER				{ printf("there is a number\n"); }
-			| SINGLECHAR				{ printf("there is a single character\n"); }
-			| CHARARRAY				{ printf("there is a character array\n"); }
-			//| LPAREN Expr RPAREN
-			//| ID LPAREN ExprList RPAREN
-			//| ID LSQUARE Expr RSQUARE
+
+
+Var			: ID				{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL);}
+			| ID LSQUARE NUMBER RSQUARE
+				{
+				//todo check that expression returns an integer
+				// the expression is placed on the left side, nothing on the right
+				$$ = newExpression(NULL, NULL, NULL, $1, $3, NULL);
+				}
 			;
 
-SimpleExpr		: AddExpr RelOp AddExpr
-			| AddExpr
+
+Primary			: ID
+				{
+				printf("there is an ID\n");
+				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL);
+				}
+			| NUMBER
+				{
+				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);
+				printf("there is a number, %i\n", $1);
+				}
+			| SINGLECHAR
+				{
+				printf("there is a single character\n");
+				$$ = newExpression(SINGLECHAR, NULL, NULL, NULL, NULL, $1);
+				}
+			| CHARARRAY
+				{
+				printf("there is a character array\n");
+				$$ = newExpression(CHARARRAY, NULL, NULL, NULL, NULL, $1);
+				}
 			;
-RelOp			: EQ | LE | GE | LT | GT | NE | AND | OR
+
+/* =============================================== */
+RelOp			: EQ  {$$ = "==";}
+			| LE  {$$ = "<=";}
+			| GE  {$$ = ">=";}
+			| LT  {$$ = "<";}
+			| GT  {$$ = ">";}
+			| NE  {$$ = "!=";}
+			| AND {$$ = "&&";}
+			| OR  {$$ = "||";}
 			;
-AddExpr			: AddExpr AddOp Term
+
+SimpleExpr		: SimpleExpr AddOp Term
+				{
+				//todo really we should cec that the two types are compatible, and use that type
+				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
+				}
+
 			| Term
+				{$$ = $1;}
 			;
-AddOp			: ADD | SUB
+AddOp			: ADD {$$ = "+";}
+			| SUB {$$ = "-";}
 			;
+
+
 Term			: Term MulOp Factor
-			| Factor
+				{
+                                $$ = newExpression(INT, $1, $3, NULL, NULL, $2);
+                                }
+			| Factor {$$ = $1;}
 			;
-MulOp 			: MULT
-			| DIV
+MulOp 			: MULT {$$ = "*";}
+			| DIV  {$$ = "/";}
 			;
-Factor			: LPAREN Expr RPAREN
+
+/* =============================================== */
+
+Factor			: LPAREN Expr RPAREN	{$$ = $2;}
 			| Var
 			| Call
-			| NUMBER
+			| NUMBER		{$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);}
 			;
 Call			: ID LPAREN Args RPAREN
 			;
