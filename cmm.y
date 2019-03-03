@@ -20,7 +20,7 @@ void yyerror(const char *);
 
 /* token declarations */
 %error-verbose
-%locations
+//%locations
 
 //%define api.value.type {struct lval}
 
@@ -139,9 +139,7 @@ Expr			: Primary		{ $$ = $1; }
 				$$ = $1; //newExpression(INT, NULL, NULL, "simple", NULL, "very simple");
 				}
 			;
-UnaryOp			: SUB
-			| NOT
-			;
+
 
 
 Var			: ID				{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL);}
@@ -199,7 +197,9 @@ SimpleExpr		: SimpleExpr AddOp Term
 AddOp			: ADD {$$ = "+";}
 			| SUB {$$ = "-";}
 			;
-
+UnaryOp			: NOT
+			//| SUB				// todo how do we fix unary minus?
+			;
 
 Term			: Term MulOp Factor
 				{
@@ -213,7 +213,7 @@ MulOp 			: MULT {$$ = "*";}
 
 /* =============================================== */
 
-Factor			: LPAREN Expr RPAREN	{$$ = $2;}
+Factor			: LPAREN Expr RPAREN	{ $$ = $2; }
 			| Var
 			| Call
 			| NUMBER		{$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);}
