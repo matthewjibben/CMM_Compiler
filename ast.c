@@ -17,7 +17,7 @@
 
 
 Declaration* newDeclaration(char* name, bool isArray, int type, int returnType,
-        Expression* value, Statement* codeBlock, paramList* params, Declaration* next){
+        Expression* value, Statement* codeBlock, ParamList* params, Declaration* next){
     Declaration *temp = malloc(sizeof(Declaration));
     temp->name = name;
     temp->isArray = isArray;
@@ -53,6 +53,14 @@ Expression* newExpression(int type, Expression* left, Expression* right, char* n
     return temp;
 }
 
+ParamList* newParamList(ParamList* next, int type, char* name){
+    ParamList *temp = malloc(sizeof(ParamList));
+    temp->next = next;
+    temp->type = type;
+    temp->name = name;
+    return temp;
+}
+
 void printExpression(Expression* expr){
     if(expr!=NULL){
         printf("\n/==============\\\n");
@@ -74,6 +82,7 @@ void printExpression(Expression* expr){
         printf("\n\\==============/\n");
     }
 }
+
 
 void printDeclaration(Declaration* decl){
 

@@ -32,11 +32,11 @@
 
 /* ============================================== */
 
-typedef struct paramList{
-    struct paramList* next;
+typedef struct ParamList{
+    struct ParamList* next;
     int type;
     char* name;
-} paramList;
+} ParamList;
 
 typedef struct Declaration{
     char* name;                     // variable name
@@ -49,8 +49,8 @@ typedef struct Declaration{
 
     struct Expression* value;        // this is the expression that is assigned to the variable
     struct Statement* codeBlock;    // used for function assignments
-    struct paramList* params;       // this is the list of parameters in a function declaration
-    //todo should the size of the paramlist be included?
+    struct ParamList* params;       // this is the list of parameters in a function declaration
+    //todo should the size of the ParamList be included?
     struct Declaration* next;       // this is the next declaration
 } Declaration;
 
@@ -88,7 +88,7 @@ typedef struct Expression{
 } Expression;
 
 Declaration* newDeclaration(char* name, bool isArray, int type, int returnType,
-                            Expression* value, Statement* codeBlock, paramList* params, Declaration* next);
+                            Expression* value, Statement* codeBlock, ParamList* params, Declaration* next);
 Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
                         Statement* codeBody, Statement* elseBody, Statement* next);
 Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval);

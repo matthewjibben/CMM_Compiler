@@ -1,4 +1,5 @@
 string myfunc(int a, string b, char c){
+    runFunction(123, asdf, "input");
     write x;
     if(myVar > 1){
         write "hi";
@@ -13,8 +14,10 @@ string myfunc(int a, string b, char c){
     int x[12];
     int y[10];
     y[2] = 123;
-    int myint = 123;
+    int myint = -123;
     x[1] = "asdf";
+    x = (1-5);
+    int x = 129 * 2001 + 25 - 7;
     runFunction(123, asdf, "input");
     // comments?
     return "thestring";
@@ -37,6 +40,6 @@ int main() {
             write 123;
         }
     }
-    string adf = "asdf;jwepo";
-    int a123 = 1 * 3 + 2;
+    string adf = "mysval123";
+    int a123 = -1 * -1 * -3 + (-2);
 }

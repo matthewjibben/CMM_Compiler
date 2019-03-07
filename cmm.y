@@ -15,11 +15,13 @@ void yyerror(const char *);
     struct Expression* expr;
     struct Statement* stmt;
     struct Declaration* decl;
+    struct ParamList* params
 }
 
 
 /* token declarations */
 %error-verbose
+//%define parse.error verbose
 //%locations
 
 //%define api.value.type {struct lval}
@@ -38,23 +40,29 @@ void yyerror(const char *);
 %token IF THEN ELSE WHILE
 %token WRITE WRITELN READ RETRN BREAK
 %token ASSIGN MOD //ADD SUB DIV MULT MOD
+%token UMINUS
 
 %type <ival> Type
 %type <decl> VarDec FunDec
 
-%type <expr> Expr Primary Factor Term SimpleExpr Var
+%type <expr> Expr Primary Factor Term SimpleExpr Var UFactor
 
-%type <sval> AddOp MulOp RelOp
+%type <sval> AddOp MulOp RelOp UnaryOp
+
+%type <stmt> Block
+
+%type <params> Params
 
 %left AND OR
 %right NOT
 %left EQ LE GE LT GT NE
 %left ADD SUB
 %left MULT DIV
+//%precedence UNARY
 
-// %type<intval> INT
 %%
 /* new grammar rules */
+
 progam			: DecList			{ printf("\nprogram rule completed\n"); }
 			;
 DecList			: DecList Declaration
@@ -63,13 +71,16 @@ DecList			: DecList Declaration
 Declaration		: VarDec
 			| FunDec
 			;
+
+/* =============================================== */
+
 VarDec			: Type ID SEMICOLON
 				{
 				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
 				}
 			| Type ID ASSIGN Expr SEMICOLON
 				{
-					//printf("There is a variable declaration\n\n");
+					printf("There is a variable declaration\n\n");
 					$$ = newDeclaration($2, false, $1, NULL, $4, NULL, NULL, NULL);
 					printExpression($4);
 					printf("===========%s\n", $$->name);
@@ -79,12 +90,16 @@ VarDec			: Type ID SEMICOLON
 				{
                         	//$$ = newDeclaration($2, true, $1, NULL, NULL, NULL, NULL, NULL);
                         	}
-			;
+//                        | Expr
+                        ;
 Type			: INT		{ $$ = INT; }
 			| CHAR		{ $$ = CHAR; }
 			| STRING	{ $$ = STRING; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN Block
+				{
+				$$ = newDeclaration($2, false, $1, $1, NULL, $6, $4, NULL);
+				}
 			;
 Params			: ParamList
 			| /* epsilon */
@@ -106,6 +121,9 @@ BlockList		: DecList StmtList
 StmtList		: StmtList Stmt
 			| /* epsilon */
 			;
+
+/* =============================================== */
+
 Stmt			: SEMICOLON
 			| Expr SEMICOLON
 			| READ ID SEMICOLON
@@ -117,6 +135,7 @@ Stmt			: SEMICOLON
 			| WhileStmt
 			| IfStmt
 			| Var ASSIGN Expr
+			| Call
 			;
 RetrnStmt		: RETRN Expr SEMICOLON			{ }//printf("we have a return"); }
 			| RETRN SEMICOLON			{ }//printf("we have a return"); }
@@ -126,27 +145,36 @@ WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
 IfStmt			: IF LPAREN Expr RPAREN Stmt
 			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
 			;
+
+/* =============================================== */
+
 Expr			: Primary		{ $$ = $1; }
-			| UnaryOp Expr
-			| Expr RelOp Expr
+			| Expr RelOp Expr	//%prec UNARY
 				{
+				printf(">>>>>>>>>>>>>>>>RELOP OP<<<<<<<<<<<<<<<<<<<");
 				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
 				printExpression($$);
 				}
 			| Call
+				{
+
+				}
 			| SimpleExpr
 				{
+				printf("simpleExpression\n");
 				$$ = $1; //newExpression(INT, NULL, NULL, "simple", NULL, "very simple");
 				}
+			| Var ASSIGN Expr
 			;
 
 
 
-Var			: ID				{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL);}
+Var			: ID			{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL);}
 			| ID LSQUARE NUMBER RSQUARE
 				{
 				//todo check that expression returns an integer
 				// the expression is placed on the left side, nothing on the right
+				printf("Var: ID LSQUARE NUMBER RSQUARE ID LSQUARE NUMBER RSQUARE");
 				$$ = newExpression(NULL, NULL, NULL, $1, $3, NULL);
 				}
 			;
@@ -160,7 +188,7 @@ Primary			: ID
 			| NUMBER
 				{
 				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);
-				printf("there is a number, %i\n", $1);
+				printf("there is a NUMBER, %i\n", $1);
 				}
 			| SINGLECHAR
 				{
@@ -187,7 +215,7 @@ RelOp			: EQ  {$$ = "==";}
 
 SimpleExpr		: SimpleExpr AddOp Term
 				{
-				//todo really we should cec that the two types are compatible, and use that type
+				//todo really we should check that the two types are compatible, and use that type
 				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
 				}
 
@@ -197,8 +225,8 @@ SimpleExpr		: SimpleExpr AddOp Term
 AddOp			: ADD {$$ = "+";}
 			| SUB {$$ = "-";}
 			;
-UnaryOp			: NOT
-			//| SUB				// todo how do we fix unary minus?
+UnaryOp			: NOT {$$ = "!";}
+			| SUB {$$ = "~";}			// todo how do we fix unary minus?
 			;
 
 Term			: Term MulOp Factor
@@ -211,12 +239,16 @@ MulOp 			: MULT {$$ = "*";}
 			| DIV  {$$ = "/";}
 			;
 
-/* =============================================== */
 
-Factor			: LPAREN Expr RPAREN	{ $$ = $2; }
+Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Var
 			| Call
-			| NUMBER		{$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);}
+			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL); }
+			| UnaryOp Factor
+				{
+                        	$2->ival = -$2->ival;
+                        	$$ = $2;
+                        	}
 			;
 Call			: ID LPAREN Args RPAREN
 			;
@@ -226,7 +258,7 @@ Args			: ArgList
 ArgList			: ArgList COMMA Expr
 			| Expr
 			;
-
+/* =============================================== */
 
 
 

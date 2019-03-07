@@ -8,7 +8,7 @@
 
 extern int yyparse();
 extern FILE* yyin;
-
+//extern FILE* output;
 int main(int argc, char **argv)
 {
     printf("=========================parser.c===============================================\n");
@@ -26,6 +26,8 @@ int main(int argc, char **argv)
     //    putchar(c);
     //}
 
+//    output = fopen("./output.asm", "w");
+//    fprintf(output, ".data\n.text\n.globl main\nmain:\n");
 
     printf("\n\nyyparse: %i\n", yyparse());
 
