@@ -4,25 +4,15 @@
 
 #include "ast.h"
 
-//void initAST(AST* ast, char* value){
-//    ast->size = 0;
-//    ast->value = value;
-//    ast->left = ast->right = ast->next = NULL;
-//}
-//
-//// newAST builds an AST node with the given inputs
-//AST* newAST(int num, ...){
-//    // should this be used?
-//}
 
-
-Declaration* newDeclaration(char* name, bool isArray, int type, int returnType,
+Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, int size,
         Expression* value, Statement* codeBlock, ParamList* params, Declaration* next){
-    Declaration *temp = malloc(sizeof(Declaration));
+    Declaration* temp = malloc(sizeof(Declaration));
     temp->name = name;
     temp->isArray = isArray;
     temp->type = type;
     temp->returnType = returnType;
+    temp->size = size;
     temp->value = value;
     temp->codeBlock = codeBlock;
     temp->params = params;
@@ -32,7 +22,7 @@ Declaration* newDeclaration(char* name, bool isArray, int type, int returnType,
 
 Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
         Statement* codeBody, Statement* elseBody, Statement* next){
-    Statement *temp = malloc(sizeof(Statement));
+    Statement* temp = malloc(sizeof(Statement));
     temp->type = type;
     temp->decl = decl;
     temp->expr = expr;
@@ -42,47 +32,85 @@ Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
     return temp;
 }
 
-Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval){
-    Expression *temp = malloc(sizeof(Expression));
+Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval,
+        ArgList* args){
+    Expression* temp = malloc(sizeof(Expression));
     temp->type = type;
     temp->left = left;
     temp->right= right;
     temp->name = name;
     temp->ival = ival;
     temp->sval = sval;
+    temp->args= args;
     return temp;
 }
 
 ParamList* newParamList(ParamList* next, int type, char* name){
-    ParamList *temp = malloc(sizeof(ParamList));
+    ParamList* temp = malloc(sizeof(ParamList));
     temp->next = next;
     temp->type = type;
     temp->name = name;
     return temp;
 }
 
-void printExpression(Expression* expr){
+ArgList* newArgList(ArgList* next, Expression* expr){
+    ArgList* temp = malloc(sizeof(ArgList));
+    temp->next = next;
+    temp->expr = expr;
+    return temp;
+}
+
+/* ================= */
+
+void appendStatement(StatementList* stmtList, Statement* stmt){
+    if(stmtList != NULL) {
+        stmtList->tail->next = stmt;
+        stmtList->tail = stmtList->tail->next;
+    }
+    else{
+        printf("statement list is null! this should not happen");
+    }
+}
+
+/* ================= */
+
+
+
+
+void printExpression(Expression* expr, int indent){
     if(expr!=NULL){
-        printf("\n/==============\\\n");
+        printf("/========|");
+        for(int i=0; i<indent; ++i){
+            printf("/========|");
+        }
         if(expr->ival!=NULL)
             printf("ival: %i ", expr->ival);
         if(expr->sval!=NULL)
             printf("sval: %s ", expr->sval);
         if(expr->name!=NULL)
             printf("name: %s ", expr->name);
-
+        if(expr->args!=NULL)
+            printArgList(expr->args, indent+1);
+        printf("\n");
         if(expr->left!=NULL) {
-            printf("\n");
-            printExpression(expr->left);
+            printExpression(expr->left, indent+1);
         }
         if(expr->right!=NULL) {
-            printf("\n");
-            printExpression(expr->right);
+            printExpression(expr->right, indent+1);
         }
-        printf("\n\\==============/\n");
+//        printf("\n\\==============/\n");
     }
+    //printf("/========|");
 }
 
+void printArgList(ArgList* args, int indent){
+    printf("\n**Args**\n");
+    while(args!=NULL){
+        printExpression(args->expr, indent);
+        args = args->next;
+    }
+    printf("********\n");
+}
 
 void printDeclaration(Declaration* decl){
 

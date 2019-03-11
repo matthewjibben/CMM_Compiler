@@ -15,7 +15,8 @@ void yyerror(const char *);
     struct Expression* expr;
     struct Statement* stmt;
     struct Declaration* decl;
-    struct ParamList* params
+    struct ParamList* params;
+    struct ArgList* args;
 }
 
 
@@ -40,18 +41,21 @@ void yyerror(const char *);
 %token IF THEN ELSE WHILE
 %token WRITE WRITELN READ RETRN BREAK
 %token ASSIGN MOD //ADD SUB DIV MULT MOD
-%token UMINUS
+
 
 %type <ival> Type
 %type <decl> VarDec FunDec
 
-%type <expr> Expr Primary Factor Term SimpleExpr Var UFactor
+%type <expr> Expr Primary Factor Term SimpleExpr Var Call
 
 %type <sval> AddOp MulOp RelOp UnaryOp
 
-%type <stmt> Block
+%type <stmt> Stmt StmtList IfStmt
+%type <stmt> Block BlockListTail
 
 %type <params> Params
+
+%type <args> ArgList Args
 
 %left AND OR
 %right NOT
@@ -60,14 +64,16 @@ void yyerror(const char *);
 %left MULT DIV
 //%precedence UNARY
 
+//%token FUNCTIONCALL
+
 %%
 /* new grammar rules */
 
-progam			: DecList			{ printf("\nprogram rule completed\n"); }
+progam			: StmtList			{ printf("\nprogram rule completed\n"); }
 			;
-DecList			: DecList Declaration
-			| /* epsilon */
-			;
+//DecList			: DecList Declaration
+//			| /* epsilon */
+//			;
 Declaration		: VarDec
 			| FunDec
 			;
@@ -76,21 +82,18 @@ Declaration		: VarDec
 
 VarDec			: Type ID SEMICOLON
 				{
-				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
+				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL, NULL);
 				}
 			| Type ID ASSIGN Expr SEMICOLON
 				{
 					printf("There is a variable declaration\n\n");
-					$$ = newDeclaration($2, false, $1, NULL, $4, NULL, NULL, NULL);
-					printExpression($4);
-					printf("===========%s\n", $$->name);
-					//printf(">>>>>>>>>>>>>>>>>%s<<<<<<<<<<<<<<<<<<<<<<<<<<", $2);
+					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL, NULL);
+					printExpression($4, 0);
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
 				{
-                        	//$$ = newDeclaration($2, true, $1, NULL, NULL, NULL, NULL, NULL);
+                        	$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL, NULL);
                         	}
-//                        | Expr
                         ;
 Type			: INT		{ $$ = INT; }
 			| CHAR		{ $$ = CHAR; }
@@ -98,7 +101,7 @@ Type			: INT		{ $$ = INT; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN Block
 				{
-				$$ = newDeclaration($2, false, $1, $1, NULL, $6, $4, NULL);
+				$$ = newDeclaration($2, false, $1, $1, NULL, NULL, $6, $4, NULL);
 				}
 			;
 Params			: ParamList
@@ -111,21 +114,26 @@ Param			: Type ID
 			| Type ID LSQUARE RSQUARE
 			;
 /* the block can have the DecList and StmtList. This allows for new functions to be built in a specific scope. */
-Block			: LBRACK BlockListTail RBRACK
+Block			: LBRACK StmtList RBRACK
 			;
-BlockListTail		: BlockListTail BlockList
-			| /* epsilon */
-			;
-BlockList		: DecList StmtList
-			;
+//BlockListTail		: BlockListTail StmtList
+//			//| BlockListTail StmtList
+//			| /* epsilon */
+//			;
+//BlockList		: DecList StmtList
+//			;
 StmtList		: StmtList Stmt
 			| /* epsilon */
 			;
 
 /* =============================================== */
 
-Stmt			: SEMICOLON
-			| Expr SEMICOLON
+Stmt			: SEMICOLON		//no operation?
+			| Expr SEMICOLON	//todo symboltable type lookup
+				{
+				printExpression($1, 0);
+				$$ = newStatement(STMT_EXPR, NULL, $1, NULL, NULL, NULL);
+				}
 			| READ ID SEMICOLON
 			| WRITE Expr SEMICOLON
 			| WRITELN SEMICOLON
@@ -134,8 +142,8 @@ Stmt			: SEMICOLON
 			| RetrnStmt
 			| WhileStmt
 			| IfStmt
-			| Var ASSIGN Expr
-			| Call
+			| Declaration
+			//| Var ASSIGN Expr SEMICOLON
 			;
 RetrnStmt		: RETRN Expr SEMICOLON			{ }//printf("we have a return"); }
 			| RETRN SEMICOLON			{ }//printf("we have a return"); }
@@ -143,62 +151,62 @@ RetrnStmt		: RETRN Expr SEMICOLON			{ }//printf("we have a return"); }
 WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
 			;
 IfStmt			: IF LPAREN Expr RPAREN Stmt
+				{
+				$$ = newStatement(STMT_IF, NULL, $3, $5, NULL, NULL);
+				}
 			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
 			;
 
 /* =============================================== */
 
-Expr			: Primary		{ $$ = $1; }
-			| Expr RelOp Expr	//%prec UNARY
+Expr			: Primary		{ $$ = $1; /*printExpression($1, 0);*/ }
+			| Expr RelOp Expr
 				{
 				printf(">>>>>>>>>>>>>>>>RELOP OP<<<<<<<<<<<<<<<<<<<");
-				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
-				printExpression($$);
+				$$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
+				//printExpression($$, 0);
 				}
-			| Call
-				{
-
-				}
-			| SimpleExpr
-				{
-				printf("simpleExpression\n");
-				$$ = $1; //newExpression(INT, NULL, NULL, "simple", NULL, "very simple");
-				}
+			| Call { $$ = $1; }
+			| SimpleExpr {$$ = $1;}
 			| Var ASSIGN Expr
+				{
+//				printf("made assign expression");
+				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
+//				printf("made assign expressioncomplete\n");
+				}
 			;
 
 
 
-Var			: ID			{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL);}
-			| ID LSQUARE NUMBER RSQUARE
+Var			: ID			{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL, NULL);}  //todo symboltable lookup
+			| ID LSQUARE Expr RSQUARE
 				{
-				//todo check that expression returns an integer
+				// todo check that expression returns an integer
 				// the expression is placed on the left side, nothing on the right
-				printf("Var: ID LSQUARE NUMBER RSQUARE ID LSQUARE NUMBER RSQUARE");
-				$$ = newExpression(NULL, NULL, NULL, $1, $3, NULL);
+				$$ = newExpression(NULL, $3, NULL, $1, $3->ival, NULL, NULL);
 				}
 			;
 
 
 Primary			: ID
 				{
-				printf("there is an ID\n");
-				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL);
+				//printf("there is an ID\n");
+				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);
 				}
 			| NUMBER
 				{
-				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL);
-				printf("there is a NUMBER, %i\n", $1);
+				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL);
+				//printf("there is a NUMBER, %i\n", $1);
 				}
 			| SINGLECHAR
 				{
-				printf("there is a single character\n");
-				$$ = newExpression(SINGLECHAR, NULL, NULL, NULL, NULL, $1);
+				//printf("there is a single character\n");
+				$$ = newExpression(SINGLECHAR, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			| CHARARRAY
 				{
-				printf("there is a character array\n");
-				$$ = newExpression(CHARARRAY, NULL, NULL, NULL, NULL, $1);
+				//printf("there is a character array\n");
+				$$ = newExpression(CHARARRAY, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			;
 
@@ -216,7 +224,7 @@ RelOp			: EQ  {$$ = "==";}
 SimpleExpr		: SimpleExpr AddOp Term
 				{
 				//todo really we should check that the two types are compatible, and use that type
-				$$ = newExpression(INT, $1, $3, NULL, NULL, $2);
+				$$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
 				}
 
 			| Term
@@ -226,12 +234,12 @@ AddOp			: ADD {$$ = "+";}
 			| SUB {$$ = "-";}
 			;
 UnaryOp			: NOT {$$ = "!";}
-			| SUB {$$ = "~";}			// todo how do we fix unary minus?
+			| SUB {$$ = "-";}
 			;
 
 Term			: Term MulOp Factor
 				{
-                                $$ = newExpression(INT, $1, $3, NULL, NULL, $2);
+                                $$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
                                 }
 			| Factor {$$ = $1;}
 			;
@@ -241,104 +249,33 @@ MulOp 			: MULT {$$ = "*";}
 
 
 Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
-			| Var
-			| Call
-			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL); }
+			| Var				{ $$ = $1; }
+			| Call				{ $$ = $1; }
+			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL); }
 			| UnaryOp Factor
 				{
                         	$2->ival = -$2->ival;
                         	$$ = $2;
                         	}
 			;
-Call			: ID LPAREN Args RPAREN
+Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
+				{
+				// malloc enough size for the new name, including open and close parentheses and null
+				char* newName = malloc(strlen($1) + 3);
+				if(newName==NULL){exit(1);}	// check malloc error
+				strcpy(newName, $1);
+				strcat(newName, "()");
+
+				$$ = newExpression(NULL, NULL, NULL, newName, NULL, NULL, $3);
+				}
 			;
-Args			: ArgList
-			| /* epsilon */
+Args			: ArgList		{$$=$1;}
+			| /* epsilon */		{$$=NULL;}
 			;
-ArgList			: ArgList COMMA Expr
-			| Expr
+ArgList			: Expr COMMA ArgList	{ $$ = newArgList($3, $1); }
+			| Expr			{ $$ = newArgList(NULL, $1); }
 			;
 /* =============================================== */
 
 
-
-/* Grammar rules */
-//prog			: VarDecList FunDecList	{ printf("\n=parse tree completed, return AST=\n"); }
-//			;
-//VarDecList		: VarDec VarDecList	{printf("THAR BE THE ANSWER %i\n", $1);}
-//			| /* epsilon */
-//			;
-//VarDec			: Type ID SEMICOLON
-//			| Type ID LSQUARE INT RSQUARE SEMICOLON
-//			{ printf("there is an assignment\n"); $$ = 123; }// printf(" type: %.10g\n name \n value: \n", $1);
-//			 					  //printf("ID name: %s\n", "fake");}
-//			;
-////Var_decl		:
-//
-//FunDecList		: FunDec
-//			| FunDec FunDecList
-//			;
-//FunDec			: Type ID LPAREN ParamDecList RPAREN Block
-//			;
-//ParamDecList		: ParamDecListTail
-//			| /* epsilon */
-//			;
-//ParamDecListTail	: ParamDec
-//			| ParamDec COMMA ParamDecListTail
-//			;
-//ParamDec		: Type ID
-//			| Type ID LSQUARE RSQUARE
-//			;
-//Block			: LBRACK VarDecList StmtList RBRACK
-//			;
-//Type			: INT						{}
-//			| CHAR		{}
-//			| STRING	{}
-//			;
-//StmtList		: Stmt
-//			| Stmt StmtList
-//			;
-//Stmt			: SEMICOLON
-//			| Expr SEMICOLON
-//			| RETRN Expr
-//			| READ ID SEMICOLON
-//			| WRITE Expr SEMICOLON
-//			| WRITELN SEMICOLON
-//			| BREAK SEMICOLON
-//			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
-//			| WHILE LPAREN Expr RPAREN Stmt
-//			| Block
-//			;
-//Expr			: Primary
-//			| UnaryOp Expr
-//			| Expr BinOp Expr
-//			| ID ASSIGN Expr
-//			| ID LSQUARE Expr RSQUARE ASSIGN Expr
-//			;
-//Primary			: ID					{ printf("there is an ID\n"); }
-//			| NUMBER				{ printf("there is a number\n"); }
-//			| SINGLECHAR				{ printf("there is a single character\n"); }
-//			| CHARARRAY				{ printf("there is a character array\n"); }
-//			| LPAREN Expr RPAREN
-//			| ID LPAREN ExprList RPAREN
-//			| ID LSQUARE Expr RSQUARE
-//			;
-//ExprList		: ExprListTail
-//			| /* epsilon */
-//			;
-//ExprListTail		: Expr
-//			| Expr COMMA ExprListTail
-//			;
-//UnaryOp			: SUB
-//			| NOT
-//			;
-//BinOp			: ADD | SUB | MULT | DIV | EQ | NE | LT | LE | GT | GE | AND | OR
-//			;
-
 %%
-
-//int main(int argc, char **argv)
-//{
-//  printf("=======THING============");
-//  return yyparse();
-//}
