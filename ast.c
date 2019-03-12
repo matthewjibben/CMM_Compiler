@@ -2,11 +2,13 @@
 // Created by Matthew Jibben on 2/22/2019.
 //
 
+#include <string.h>
+#include <stdlib.h>
 #include "ast.h"
 
 
 Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, int size,
-        Expression* value, Statement* codeBlock, ParamList* params, Declaration* next){
+        Expression* value, Statement* codeBlock, ParamList* params){
     Declaration* temp = malloc(sizeof(Declaration));
     temp->name = name;
     temp->isArray = isArray;
@@ -16,7 +18,7 @@ Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, 
     temp->value = value;
     temp->codeBlock = codeBlock;
     temp->params = params;
-    temp->next= next;
+    //temp->next= next;
     return temp;
 }
 
@@ -41,17 +43,38 @@ Expression* newExpression(int type, Expression* left, Expression* right, char* n
     temp->name = name;
     temp->ival = ival;
     temp->sval = sval;
-    temp->args= args;
+    temp->args = args;
     return temp;
 }
 
-ParamList* newParamList(ParamList* next, int type, char* name){
-    ParamList* temp = malloc(sizeof(ParamList));
-    temp->next = next;
+/* ================= */
+
+Param* newParam(int type, char* name, Param* next, bool isArray){
+    Param* temp = malloc(sizeof(Param));
     temp->type = type;
     temp->name = name;
+    temp->next = next;
+    temp->isArray = isArray;
     return temp;
 }
+
+ParamList* newParamList(Param* param){
+    ParamList* temp = malloc(sizeof(ParamList));
+    temp->head = temp->tail = param;
+    return temp;
+}
+
+void appendParam(ParamList* paramList, Param* param){
+    if(paramList != NULL) {
+        paramList->tail->next = param;
+        paramList->tail = paramList->tail->next;
+    }
+    else{
+        printf("paramList list is null! this should not happen!");
+    }
+}
+
+/* ================= */
 
 ArgList* newArgList(ArgList* next, Expression* expr){
     ArgList* temp = malloc(sizeof(ArgList));
@@ -62,19 +85,36 @@ ArgList* newArgList(ArgList* next, Expression* expr){
 
 /* ================= */
 
+StatementList* newStatementList(Statement* stmt){
+    StatementList* temp = malloc(sizeof(StatementList));
+    temp->head = temp->tail = stmt;
+    return temp;
+}
+
 void appendStatement(StatementList* stmtList, Statement* stmt){
     if(stmtList != NULL) {
         stmtList->tail->next = stmt;
         stmtList->tail = stmtList->tail->next;
     }
     else{
-        printf("statement list is null! this should not happen");
+        printf("statement list is null! this should not happen!");
     }
 }
+
 
 /* ================= */
 
 
+void printStatementList(StatementList* stmtList, int indent){
+    if(stmtList!=NULL) {
+        Statement *temp = stmtList->head;
+        while (temp != NULL) {
+            printf("printing...\n");
+            printStatement(temp, indent);
+            temp = temp->next;
+        }
+    }
+}
 
 
 void printExpression(Expression* expr, int indent){
@@ -83,7 +123,7 @@ void printExpression(Expression* expr, int indent){
         for(int i=0; i<indent; ++i){
             printf("/========|");
         }
-        if(expr->ival!=NULL)
+        if(expr->ival!=NULL || expr->type==INT)
             printf("ival: %i ", expr->ival);
         if(expr->sval!=NULL)
             printf("sval: %s ", expr->sval);
@@ -98,25 +138,104 @@ void printExpression(Expression* expr, int indent){
         if(expr->right!=NULL) {
             printExpression(expr->right, indent+1);
         }
-//        printf("\n\\==============/\n");
     }
-    //printf("/========|");
 }
 
 void printArgList(ArgList* args, int indent){
-    printf("\n**Args**\n");
+    printf("\n");
+    printIndent(indent);
+    printf("**Args**\n");
     while(args!=NULL){
         printExpression(args->expr, indent);
         args = args->next;
     }
+    printIndent(indent);
     printf("********\n");
 }
+void printIndent(int indent){
+    for(int i=0; i<indent+1; ++i){
+        printf("/========|");
+    }
+}
+void printDeclaration(Declaration* decl, int indent){
+    if(decl!=NULL){
+        printIndent(indent-1);
+        printf("Declaration:\n");
+//        for(int i=0; i<indent; ++i){
+//            printf("/========|");
+//        }
+        if(decl->name!=NULL) {
+            printIndent(indent);
+            printf("name: %s", decl->name);
+            if(decl->isArray) {
+                printf("[%i]", decl->size);
+                if(decl->size!=NULL) {
+                    printf(" size: %i", decl->size);
+                }
+            } else if(decl->type==FUNCTION){
+                printParams(decl->params);
+                printf("\n");
+                printStatement(decl->codeBlock, indent+1);
+            }
+            printf(" \n");
+        }
 
-void printDeclaration(Declaration* decl){
-
+        if(decl->value!=NULL){
+            printExpression(decl->value, indent);
+        }
+        printf("\nEnd declaration\n");
+    }
 }
 
-void printStatement(Statement* stmt){
-
+void printParams(ParamList* params){
+    printf("(");
+    if(params!=NULL) {
+        Param *temp = params->head;
+        while (temp != NULL) {
+            printf("%s", temp->name);
+            if(temp->isArray){
+                printf("[]");
+            }
+            temp = temp->next;
+            if (temp != NULL) {
+                printf(",");
+            }
+        }
+    }
+    printf(") ");
 }
+
+void printStatement(Statement* stmt, int indent){
+    if(stmt!=NULL){
+//        // create the indent string
+//        char* indentString = "/========|";
+//        size_t length = strlen(indentString);
+//        char* fullIndent = (char*)malloc(length*(indent+1));
+//        if(fullIndent==NULL){ printf("malloc issues"); exit(1);} //memory issue
+//        for(int i=0; i<indent;++i){memcpy(fullIndent, indentString, length);}
+
+
+        if(stmt->type==STMT_EXPR){
+            printIndent(indent-1);
+            printf("Expression statement: \n");
+            printExpression(stmt->expr, indent);
+        }
+        else if(stmt->type==STMT_DECL) {
+            printDeclaration(stmt->decl, indent);
+        }
+
+        printf("\n");
+        printIndent(indent-1);
+        printf("Next Statement ------------------------------>\n");
+        printStatement(stmt->next, indent);
+//        free(fullIndent);
+    }
+}
+
+
+/* ======================================= */
+void freeStmtList(StatementList* stmtList){
+    free(stmtList);
+}
+
 //todo treefree function is needed

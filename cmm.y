@@ -15,8 +15,12 @@ void yyerror(const char *);
     struct Expression* expr;
     struct Statement* stmt;
     struct Declaration* decl;
+
     struct ParamList* params;
+    struct Param* param;
+
     struct ArgList* args;
+    struct StatementList* stmtList;
 }
 
 
@@ -44,16 +48,20 @@ void yyerror(const char *);
 
 
 %type <ival> Type
-%type <decl> VarDec FunDec
+%type <decl> VarDec FunDec Declaration
 
 %type <expr> Expr Primary Factor Term SimpleExpr Var Call
 
 %type <sval> AddOp MulOp RelOp UnaryOp
 
-%type <stmt> Stmt StmtList IfStmt
+%type <stmt> Stmt IfStmt WhileStmt RetrnStmt
 %type <stmt> Block BlockListTail
 
-%type <params> Params
+%type <stmtList> StmtList
+
+%type <params> Params ParamList
+%type <param> Param
+
 
 %type <args> ArgList Args
 
@@ -64,35 +72,39 @@ void yyerror(const char *);
 %left MULT DIV
 //%precedence UNARY
 
-//%token FUNCTIONCALL
+%token FUNCTION		// this is purely for the parse tree
 
 %%
 /* new grammar rules */
 
-progam			: StmtList			{ printf("\nprogram rule completed\n"); }
-			;
-//DecList			: DecList Declaration
-//			| /* epsilon */
-//			;
-Declaration		: VarDec
-			| FunDec
+progam			: StmtList
+				{
+				printf("\nprogram rule completed\n\n");
+				printStatement($1->head, 0);
+				}
 			;
 
 /* =============================================== */
 
+Declaration		: VarDec	{$$=$1;}
+			| FunDec	{$$=$1;}
+			;
+
 VarDec			: Type ID SEMICOLON
 				{
-				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL, NULL);
+				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
 				}
 			| Type ID ASSIGN Expr SEMICOLON
 				{
 					printf("There is a variable declaration\n\n");
-					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL, NULL);
-					printExpression($4, 0);
+					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL);
+					//printExpression($4, 0);
+					//printDeclaration($$, 0);
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
 				{
-                        	$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL, NULL);
+                        	$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL);
+                        	//printDeclaration($$, 0);
                         	}
                         ;
 Type			: INT		{ $$ = INT; }
@@ -101,29 +113,38 @@ Type			: INT		{ $$ = INT; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN Block
 				{
-				$$ = newDeclaration($2, false, $1, $1, NULL, NULL, $6, $4, NULL);
+				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, $6, $4);
+				//printDeclaration($$, 0);
 				}
 			;
-Params			: ParamList
-			| /* epsilon */
+Params			: ParamList			{$$=$1;}
+			| /* epsilon */			{$$=NULL;}
 			;
-ParamList		: ParamList COMMA Param
-			| Param
+ParamList		: ParamList COMMA Param		{ appendParam($1, $3); }
+			| Param				{ $$ = newParamList($1); }
 			;
-Param			: Type ID
-			| Type ID LSQUARE RSQUARE
+Param			: Type ID			{ $$ = newParam($1, $2, NULL, false); }
+			| Type ID LSQUARE RSQUARE	{ $$ = newParam($1, $2, NULL, true); }
 			;
 /* the block can have the DecList and StmtList. This allows for new functions to be built in a specific scope. */
 Block			: LBRACK StmtList RBRACK
+				{
+//				printf("**====================================**\n");
+				//printStatementList($2);
+//				printf("**====================================**\n");
+				$$ = $2->head;
+				freeStmtList($2);
+				}
 			;
-//BlockListTail		: BlockListTail StmtList
-//			//| BlockListTail StmtList
-//			| /* epsilon */
-//			;
-//BlockList		: DecList StmtList
-//			;
 StmtList		: StmtList Stmt
-			| /* epsilon */
+				{
+				appendStatement($1, $2);
+				}
+			| Stmt
+				{
+				$$ = newStatementList($1);
+				}
+			| /* epsilon */	{$$=NULL;}
 			;
 
 /* =============================================== */
@@ -131,30 +152,56 @@ StmtList		: StmtList Stmt
 Stmt			: SEMICOLON		//no operation?
 			| Expr SEMICOLON	//todo symboltable type lookup
 				{
-				printExpression($1, 0);
+				//printExpression($1, 0);
 				$$ = newStatement(STMT_EXPR, NULL, $1, NULL, NULL, NULL);
 				}
-			| READ ID SEMICOLON
+			| READ Var SEMICOLON
+				{
+				// this can be treated like an assign
+				// whatever is given in the console, assign to the ID
+				$$ = newStatement(STMT_READ, NULL, NULL, NULL, NULL, NULL);
+				}
 			| WRITE Expr SEMICOLON
+				{
+				//todo check that this is a string (only print strings)
+				$$ = newStatement(STMT_WRITE, NULL, $2, NULL, NULL, NULL);
+				}
 			| WRITELN SEMICOLON
+				{
+				$$ = newStatement(STMT_WRITELN, NULL, NULL, NULL, NULL, NULL);
+				}
 			| BREAK SEMICOLON
+				{
+				$$ = newStatement(STMT_BREAK, NULL, NULL, NULL, NULL, NULL);
+				}
 			| Block
-			| RetrnStmt
-			| WhileStmt
-			| IfStmt
+				{
+				$$ = newStatement(STMT_BLOCK, NULL, NULL, $1, NULL, NULL);
+				}
+			| RetrnStmt 	{$$=$1;}
+			| WhileStmt	{$$=$1;}
+			| IfStmt	{$$=$1;}
 			| Declaration
-			//| Var ASSIGN Expr SEMICOLON
+				{
+				$$=newStatement(STMT_DECL, $1, NULL, NULL, NULL, NULL);
+				}
 			;
-RetrnStmt		: RETRN Expr SEMICOLON			{ }//printf("we have a return"); }
-			| RETRN SEMICOLON			{ }//printf("we have a return"); }
+RetrnStmt		: RETRN Expr SEMICOLON	{ $$ = newStatement(STMT_RETRN, NULL, $2, NULL, NULL, NULL); }
+			| RETRN SEMICOLON	{ $$ = newStatement(STMT_RETRN, NULL, NULL, NULL, NULL, NULL); }	//could be removed?
 			;
 WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
+				{
+				$$ = newStatement(STMT_WHILE, NULL, $3, $5, NULL, NULL);
+				}
 			;
 IfStmt			: IF LPAREN Expr RPAREN Stmt
 				{
 				$$ = newStatement(STMT_IF, NULL, $3, $5, NULL, NULL);
 				}
 			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
+				{
+                                $$ = newStatement(STMT_IF_ELSE, NULL, $3, $5, $7, NULL);
+                                }
 			;
 
 /* =============================================== */
