@@ -81,6 +81,7 @@ progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
 				printStatement($1->head, 0);
+				freeStmtList($1);
 				}
 			;
 

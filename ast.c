@@ -119,10 +119,11 @@ void printStatementList(StatementList* stmtList, int indent){
 
 void printExpression(Expression* expr, int indent){
     if(expr!=NULL){
-        printf("/========|");
-        for(int i=0; i<indent; ++i){
-            printf("/========|");
-        }
+//        printf("/========|");
+//        for(int i=0; i<indent; ++i){
+//            printf("/========|");
+//        }
+        printIndent(indent);
         if(expr->ival!=NULL || expr->type==INT)
             printf("ival: %i ", expr->ival);
         if(expr->sval!=NULL)
@@ -160,7 +161,7 @@ void printIndent(int indent){
 void printDeclaration(Declaration* decl, int indent){
     if(decl!=NULL){
         printIndent(indent-1);
-        printf("Declaration:\n");
+        printf("Declaration:\n\n");
 //        for(int i=0; i<indent; ++i){
 //            printf("/========|");
 //        }
@@ -183,7 +184,9 @@ void printDeclaration(Declaration* decl, int indent){
         if(decl->value!=NULL){
             printExpression(decl->value, indent);
         }
-        printf("\nEnd declaration\n");
+        printf("\n");
+        printIndent(indent-1);
+        printf("End declaration\n");
     }
 }
 
@@ -191,7 +194,7 @@ void printParams(ParamList* params){
     printf("(");
     if(params!=NULL) {
         Param *temp = params->head;
-        while (temp != NULL) {
+        while (temp != NULL){
             printf("%s", temp->name);
             if(temp->isArray){
                 printf("[]");
@@ -207,13 +210,6 @@ void printParams(ParamList* params){
 
 void printStatement(Statement* stmt, int indent){
     if(stmt!=NULL){
-//        // create the indent string
-//        char* indentString = "/========|";
-//        size_t length = strlen(indentString);
-//        char* fullIndent = (char*)malloc(length*(indent+1));
-//        if(fullIndent==NULL){ printf("malloc issues"); exit(1);} //memory issue
-//        for(int i=0; i<indent;++i){memcpy(fullIndent, indentString, length);}
-
 
         if(stmt->type==STMT_EXPR){
             printIndent(indent-1);
@@ -225,10 +221,13 @@ void printStatement(Statement* stmt, int indent){
         }
 
         printf("\n");
-        printIndent(indent-1);
-        printf("Next Statement ------------------------------>\n");
-        printStatement(stmt->next, indent);
-//        free(fullIndent);
+
+        stmt = stmt->next;
+        if(stmt!=NULL) {
+            printIndent(indent-1);
+            printf("Next Statement ------------------------------>\n");
+        }
+        printStatement(stmt, indent);
     }
 }
 
