@@ -54,6 +54,7 @@ read            { adjust(); return READ; }
 write           { adjust(); return WRITE; }
 writeln         { adjust(); return WRITELN; }
 return          { adjust(); return RETRN; }
+break           { adjust(); return BREAK; }
 
 int                     { adjust(); return INT; }
 char		            { adjust(); return CHAR; }

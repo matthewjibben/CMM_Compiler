@@ -160,7 +160,7 @@ Stmt			: SEMICOLON		//no operation?
 				{
 				// this can be treated like an assign
 				// whatever is given in the console, assign to the ID
-				$$ = newStatement(STMT_READ, NULL, NULL, NULL, NULL, NULL);
+				$$ = newStatement(STMT_READ, NULL, $2, NULL, NULL, NULL);
 				}
 			| WRITE Expr SEMICOLON
 				{
@@ -208,10 +208,10 @@ IfStmt			: IF LPAREN Expr RPAREN Stmt
 /* =============================================== */
 
 Expr			: Primary		{ $$ = $1; /*printExpression($1, 0);*/ }
-			| Expr RelOp Expr
+			| Expr RelOp Expr	//todo should type be $2?
 				{
 				printf(">>>>>>>>>>>>>>>>RELOP OP<<<<<<<<<<<<<<<<<<<");
-				$$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
+				$$ = newExpression($2, $1, $3, NULL, NULL, $2, NULL);
 				//printExpression($$, 0);
 				}
 			| Call { $$ = $1; }
@@ -272,7 +272,11 @@ RelOp			: EQ  {$$ = "==";}
 SimpleExpr		: SimpleExpr AddOp Term
 				{
 				//todo really we should check that the two types are compatible, and use that type
-				$$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
+				if($2 =="+"){
+					$$ = newExpression(ADD, $1, $3, NULL, NULL, $2, NULL);
+				} else if($2 =="-") {
+					$$ = newExpression(SUB, $1, $3, NULL, NULL, $2, NULL);
+				}
 				}
 
 			| Term
@@ -287,7 +291,11 @@ UnaryOp			: NOT {$$ = "!";}
 
 Term			: Term MulOp Factor
 				{
-                                $$ = newExpression(INT, $1, $3, NULL, NULL, $2, NULL);
+				if($2 =="*"){
+                                	$$ = newExpression(MULT, $1, $3, NULL, NULL, $2, NULL);
+                                } else if($2 =="/") {
+                                	$$ = newExpression(DIV, $1, $3, NULL, NULL, $2, NULL);
+                                }
                                 }
 			| Factor {$$ = $1;}
 			;
@@ -300,7 +308,7 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Var				{ $$ = $1; }
 			| Call				{ $$ = $1; }
 			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL); }
-			| UnaryOp Factor
+			| UnaryOp Factor	//todo update this for NOT
 				{
                         	$2->ival = -$2->ival;
                         	$$ = $2;

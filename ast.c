@@ -207,10 +207,10 @@ void printParams(ParamList* params){
     }
     printf(") ");
 }
-
+//todo is there a way to print the types of items?
 void printStatement(Statement* stmt, int indent){
     if(stmt!=NULL){
-
+        // print statements for every type of statement
         if(stmt->type==STMT_EXPR){
             printIndent(indent-1);
             printf("Expression statement: \n");
@@ -219,13 +219,83 @@ void printStatement(Statement* stmt, int indent){
         else if(stmt->type==STMT_DECL) {
             printDeclaration(stmt->decl, indent);
         }
+        else if(stmt->type==STMT_READ) {
+            printIndent(indent-1);
+            printf("READ: \n");
+            printExpression(stmt->expr, indent);
+        }
+        else if(stmt->type==STMT_WRITE) {
+            printIndent(indent-1);
+            printf("WRITE: \n");
+            printExpression(stmt->expr, indent);
+        }
+        else if(stmt->type==STMT_WRITELN) {
+            printIndent(indent-1);
+            printf("WRITELN \n");
+        }
+        else if(stmt->type==STMT_BREAK) {
+            printIndent(indent-1);
+            printf("BREAK \n");
+        }
+        else if(stmt->type==STMT_BLOCK) {
+            printIndent(indent-1);
+            printf("BLOCK: \n\n");
+            printStatement(stmt->codeBody, indent+1);
+            printIndent(indent-1);
+            printf("END BLOCK \n");
+        }
+        else if(stmt->type==STMT_RETRN) {
+            printIndent(indent-1);
+            printf("RETURN: \n");
+            printExpression(stmt->expr, indent);
+        }
+        else if(stmt->type==STMT_WHILE) {
+            printIndent(indent-1);
+            printf("WHILE: \n\n");
+            printExpression(stmt->expr, indent);
+
+            printIndent(indent-1);
+            printf("RUN: \n\n");
+
+            printStatement(stmt->codeBody, indent+1);
+            printIndent(indent-1);
+            printf("END WHILE\n");
+        }
+        else if(stmt->type==STMT_IF) {
+            printIndent(indent-1);
+            printf("IF: \n\n");
+            printExpression(stmt->expr, indent);
+
+            printIndent(indent-1);
+            printf("RUN: \n\n");
+
+            printStatement(stmt->codeBody, indent+1);
+            printIndent(indent-1);
+            printf("END IF\n");
+        }
+        else if(stmt->type==STMT_IF_ELSE) {
+            printIndent(indent-1);
+            printf("IF: \n\n");
+            printExpression(stmt->expr, indent);
+
+            printIndent(indent-1);
+            printf("RUN: \n\n");
+            printStatement(stmt->codeBody, indent+1);
+
+            printIndent(indent-1);
+            printf("ELSE RUN: \n\n");
+            printStatement(stmt->elseBody, indent+1);
+
+            printIndent(indent-1);
+            printf("END IF_ELSE\n");
+        }
 
         printf("\n");
 
         stmt = stmt->next;
         if(stmt!=NULL) {
             printIndent(indent-1);
-            printf("Next Statement ------------------------------>\n");
+            printf("Next Statement ------------------------------>\n\n");
         }
         printStatement(stmt, indent);
     }
@@ -233,6 +303,7 @@ void printStatement(Statement* stmt, int indent){
 
 
 /* ======================================= */
+
 void freeStmtList(StatementList* stmtList){
     free(stmtList);
 }
