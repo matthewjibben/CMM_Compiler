@@ -139,4 +139,9 @@ void appendParam(ParamList* paramList, Param* param);
 /* ================= */
 void freeStmtList(StatementList* stmtList);
 
+void freetree(Statement* stmtTree);
+
+
+void printTypeString(int typeToken);
+
 #endif //AST_H

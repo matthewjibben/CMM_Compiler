@@ -130,7 +130,7 @@ string                  { adjust(); return STRING; }
 
 
 void yyerror(const char *s){
-    fprintf(stderr, "ERROR line %i, character: %i: %s\n", yylineno, chars, s);
+    fprintf(stderr, "SYNTAX ERROR on line %i, character: %i: %s\n", yylineno, chars, s);
     printf("current word: %s", yytext);
 }
 

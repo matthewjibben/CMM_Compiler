@@ -1,6 +1,6 @@
 int x = 0;
 x = 5;
-string myfunc(int a, string b, char c){
+string myfunc(int a[], string b, char c){
     runFunction(123, asdf, "input");
     {
     read x;

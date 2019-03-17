@@ -195,7 +195,8 @@ void printParams(ParamList* params){
     if(params!=NULL) {
         Param *temp = params->head;
         while (temp != NULL){
-            printf("%s", temp->name);
+            printTypeString(temp->type);
+            printf(" %s", temp->name);
             if(temp->isArray){
                 printf("[]");
             }
@@ -207,7 +208,7 @@ void printParams(ParamList* params){
     }
     printf(") ");
 }
-//todo is there a way to print the types of items?
+
 void printStatement(Statement* stmt, int indent){
     if(stmt!=NULL){
         // print statements for every type of statement
@@ -301,6 +302,17 @@ void printStatement(Statement* stmt, int indent){
     }
 }
 
+void printTypeString(int typeToken){
+    if(typeToken==INT){
+        printf("int");
+    }
+    else if(typeToken==CHAR){
+        printf("char");
+    }
+    else if(typeToken==STRING){
+        printf("string");
+    }
+}
 
 /* ======================================= */
 
