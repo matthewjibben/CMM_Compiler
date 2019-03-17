@@ -30,10 +30,16 @@ typedef struct Param {
 
 
 typedef struct ArgList {
-    struct ArgList* next;
-    struct Expression* expr;
+//    struct ArgList* next;
+//    struct Expression* expr;
+    struct Argument* head;
+    struct Argument* tail;
 } ArgList;
 
+typedef struct Argument {
+    struct Argument* next;
+    struct Expression* expr;
+} Argument;
 
 /* ============================================== */
 
@@ -115,7 +121,14 @@ Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
                         Statement* codeBody, Statement* elseBody, Statement* next);
 Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval,
         ArgList* args);
-ArgList* newArgList(ArgList* next, Expression* expr);
+
+/* ================= */
+
+//ArgList* newArgList(ArgList* next, Expression* expr);
+
+ArgList* newArgList(Argument* arg);
+Argument* newArgument(Argument* next, Expression* expr);
+void appendArgument(ArgList* argList, Argument* arg);
 
 /* ================= */
 

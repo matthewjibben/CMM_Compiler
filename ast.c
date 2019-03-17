@@ -76,11 +76,28 @@ void appendParam(ParamList* paramList, Param* param){
 
 /* ================= */
 
-ArgList* newArgList(ArgList* next, Expression* expr){
+
+ArgList* newArgList(Argument* arg){
     ArgList* temp = malloc(sizeof(ArgList));
+    temp->head = temp->tail = arg;
+    return temp;
+}
+
+Argument* newArgument(Argument* next, Expression* expr){
+    Argument* temp = malloc(sizeof(Argument));
     temp->next = next;
     temp->expr = expr;
     return temp;
+}
+
+void appendArgument(ArgList* argList, Argument* arg){
+    if(argList != NULL) {
+        argList->tail->next = arg;
+        argList->tail = argList->tail->next;
+    }
+    else {
+        printf("argList list is null! this should not happen!");
+    }
 }
 
 /* ================= */
@@ -146,9 +163,10 @@ void printArgList(ArgList* args, int indent){
     printf("\n");
     printIndent(indent);
     printf("**Args**\n");
-    while(args!=NULL){
-        printExpression(args->expr, indent);
-        args = args->next;
+    Argument* temp = args->head;
+    while(temp!=NULL){
+        printExpression(temp->expr, indent);
+        temp = temp->next;
     }
     printIndent(indent);
     printf("********\n");

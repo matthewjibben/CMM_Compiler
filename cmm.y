@@ -328,8 +328,11 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 Args			: ArgList		{$$=$1;}
 			| /* epsilon */		{$$=NULL;}
 			;
-ArgList			: Expr COMMA ArgList	{ $$ = newArgList($3, $1); }
-			| Expr			{ $$ = newArgList(NULL, $1); }
+ArgList			: ArgList COMMA Expr	{ appendArgument($1, newArgument(NULL, $3)); }
+			| Expr
+				{
+				$$ = newArgList(newArgument(NULL, $1));
+				}
 			;
 /* =============================================== */
 
