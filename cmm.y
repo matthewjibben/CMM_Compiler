@@ -81,6 +81,7 @@ progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
 				printStatement($1->head, 0);
+				freeStatement($1->head);
 				freeStmtList($1);
 				}
 			;
@@ -316,13 +317,8 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			;
 Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				{
-				// malloc enough size for the new name, including open and close parentheses and null
-				char* newName = malloc(strlen($1) + 3);
-				if(newName==NULL){exit(1);}	// check malloc error
-				strcpy(newName, $1);
-				strcat(newName, "()");
-
-				$$ = newExpression(NULL, NULL, NULL, newName, NULL, NULL, $3);
+				$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL, $3);
+				$$->isFunctionCall = true;
 				}
 			;
 Args			: ArgList		{$$=$1;}

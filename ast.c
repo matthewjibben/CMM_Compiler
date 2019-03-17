@@ -145,8 +145,12 @@ void printExpression(Expression* expr, int indent){
             printf("ival: %i ", expr->ival);
         if(expr->sval!=NULL)
             printf("sval: %s ", expr->sval);
-        if(expr->name!=NULL)
-            printf("name: %s ", expr->name);
+        if(expr->name!=NULL) {
+            printf("name: %s", expr->name);
+            if(expr->isFunctionCall)
+                printf("()");
+            printf(" ");
+        }
         if(expr->args!=NULL)
             printArgList(expr->args, indent+1);
         printf("\n");
@@ -338,4 +342,62 @@ void freeStmtList(StatementList* stmtList){
     free(stmtList);
 }
 
-//todo treefree function is needed
+
+void freeExpression(Expression* expr){
+    if(expr!=NULL){
+        freeExpression(expr->left);
+        freeExpression(expr->right);
+        freeArgList(expr->args);
+        free(expr);
+    }
+}
+
+void freeDeclaration(Declaration* decl){
+    if(decl!=NULL){
+        freeExpression(decl->value);
+        freeStatement(decl->codeBlock);
+        freeParamList(decl->params);
+        free(decl);
+    }
+}
+
+void freeStatement(Statement* stmt){
+    if(stmt!=NULL){
+        freeDeclaration(stmt->decl);
+        freeExpression(stmt->expr);
+        freeStatement(stmt->codeBody);
+        freeStatement(stmt->elseBody);
+        freeStatement(stmt->next);
+        free(stmt);
+    }
+}
+
+void freeArgList(ArgList* argList){
+    if(argList!=NULL){
+        freeArgument(argList->head);
+        free(argList);
+    }
+}
+
+void freeArgument(Argument* arg){
+    if(arg!=NULL){
+        freeArgument(arg->next);
+        freeExpression(arg->expr);
+        free(arg);
+    }
+}
+
+void freeParamList(ParamList* params){
+    if(params!=NULL){
+        freeParameter(params->head);
+        free(params);
+    }
+}
+
+void freeParameter(Param* param){
+    if(param!=NULL){
+        free(param->name);
+        free(param->next);
+        free(param);
+    }
+}

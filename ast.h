@@ -30,8 +30,6 @@ typedef struct Param {
 
 
 typedef struct ArgList {
-//    struct ArgList* next;
-//    struct Expression* expr;
     struct Argument* head;
     struct Argument* tail;
 } ArgList;
@@ -108,6 +106,8 @@ typedef struct Expression{
     int ival;
     char* sval;
 
+    bool isFunctionCall;
+
     ArgList* args;
 } Expression;
 
@@ -143,6 +143,7 @@ void printStatement(Statement* stmt, int indent);
 void printDeclaration(Declaration* decl, int indent);
 void printParams(ParamList* params);
 void printIndent(int indent);
+void printTypeString(int typeToken);
 /* ================= */
 
 Param* newParam(int type, char* name, Param* next, bool isArray);
@@ -152,9 +153,15 @@ void appendParam(ParamList* paramList, Param* param);
 /* ================= */
 void freeStmtList(StatementList* stmtList);
 
-void freetree(Statement* stmtTree);
+void freeExpression(Expression* expr);
+void freeDeclaration(Declaration* decl);
+void freeStatement(Statement* stmt);
 
+void freeArgList(ArgList* argList);
+void freeArgument(Argument* arg);
 
-void printTypeString(int typeToken);
+void freeParamList(ParamList* params);
+void freeParameter(Param* param);
+
 
 #endif //AST_H
