@@ -55,7 +55,7 @@ void yyerror(const char *);
 %type <sval> AddOp MulOp RelOp UnaryOp
 
 %type <stmt> Stmt IfStmt WhileStmt RetrnStmt
-%type <stmt> Block BlockListTail
+%type <stmt> Block
 
 %type <stmtList> StmtList
 
@@ -146,12 +146,15 @@ StmtList		: StmtList Stmt
 				{
 				$$ = newStatementList($1);
 				}
-			| /* epsilon */	{$$=NULL;}
+			| /* epsilon */	{$$=newStatementList(NULL);}
 			;
 
 /* =============================================== */
 
 Stmt			: SEMICOLON		//no operation?
+				{
+				$$ = newStatement(STMT_NULL, NULL,NULL, NULL, NULL, NULL);
+				}
 			| Expr SEMICOLON	//todo symboltable type lookup
 				{
 				//printExpression($1, 0);

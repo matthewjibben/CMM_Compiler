@@ -65,9 +65,16 @@ ParamList* newParamList(Param* param){
 }
 
 void appendParam(ParamList* paramList, Param* param){
+    //append a parameter to the end of the linked list
+    //if the list is empty, set a new head and tail
     if(paramList != NULL) {
-        paramList->tail->next = param;
-        paramList->tail = paramList->tail->next;
+        if(paramList->head!=NULL) {
+            paramList->tail->next = param;
+            paramList->tail = paramList->tail->next;
+        }
+        else {
+            paramList->head = paramList->tail = param;
+        }
     }
     else{
         printf("paramList list is null! this should not happen!");
@@ -92,8 +99,12 @@ Argument* newArgument(Argument* next, Expression* expr){
 
 void appendArgument(ArgList* argList, Argument* arg){
     if(argList != NULL) {
-        argList->tail->next = arg;
-        argList->tail = argList->tail->next;
+        if(argList->head!=NULL) {
+            argList->tail->next = arg;
+            argList->tail = argList->tail->next;
+        } else {
+            argList->head = argList->tail = arg;
+        }
     }
     else {
         printf("argList list is null! this should not happen!");
@@ -110,8 +121,13 @@ StatementList* newStatementList(Statement* stmt){
 
 void appendStatement(StatementList* stmtList, Statement* stmt){
     if(stmtList != NULL) {
-        stmtList->tail->next = stmt;
-        stmtList->tail = stmtList->tail->next;
+        if(stmtList->head!=NULL) {
+            stmtList->tail->next = stmt;
+            stmtList->tail = stmtList->tail->next;
+        } else {
+            stmtList->head = stmtList->tail = stmt;
+
+        }
     }
     else{
         printf("statement list is null! this should not happen!");
@@ -234,7 +250,11 @@ void printParams(ParamList* params){
 void printStatement(Statement* stmt, int indent){
     if(stmt!=NULL){
         // print statements for every type of statement
-        if(stmt->type==STMT_EXPR){
+        if(stmt->type==STMT_NULL) {
+            printIndent(indent-1);
+            printf("No Operation\n");
+        }
+        else if(stmt->type==STMT_EXPR){
             printIndent(indent-1);
             printf("Expression statement: \n");
             printExpression(stmt->expr, indent);

@@ -73,7 +73,8 @@ typedef enum stmtType{
     STMT_WHILE,
     STMT_IF,
     STMT_IF_ELSE,
-    STMT_DECL
+    STMT_DECL,
+    STMT_NULL
 } stmtType;
 
 typedef struct Statement{
@@ -114,7 +115,7 @@ typedef struct Expression{
 
 /* ============================================== */
 
-
+//main struct builder functions
 Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, int size,
                             Expression* value, Statement* codeBlock, ParamList* params);
 Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
@@ -124,7 +125,6 @@ Expression* newExpression(int type, Expression* left, Expression* right, char* n
 
 /* ================= */
 
-//ArgList* newArgList(ArgList* next, Expression* expr);
 
 ArgList* newArgList(Argument* arg);
 Argument* newArgument(Argument* next, Expression* expr);
@@ -151,6 +151,7 @@ ParamList* newParamList(Param* param);
 void appendParam(ParamList* paramList, Param* param);
 
 /* ================= */
+// struct freeing functions
 void freeStmtList(StatementList* stmtList);
 
 void freeExpression(Expression* expr);
