@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 {
     printf("=========================parser.c=========================\n");
     //open the input sample cmm file
-    if((yyin = fopen("./sample.cmm","r"))==NULL){
+    if((yyin = fopen("./sample3.cmm","r"))==NULL){
         printf("Failed to read file");
         exit(1);
     }
@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     }
 
 
-    output = fopen("./output.asm", "w");
+//    output = fopen("./output.asm", "w");
 //    fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
 
     printf("\n\nProcess finished with exit code: %i\n\n\n", yyparse());
@@ -35,6 +35,6 @@ int main(int argc, char **argv)
 //    fprintf(output, "syscall\n");
 
     fclose(yyin);
-    fclose(output);
+//    fclose(output);
     return 0;
 }

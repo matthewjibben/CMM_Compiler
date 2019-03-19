@@ -208,9 +208,6 @@ void printDeclaration(Declaration* decl, int indent){
     if(decl!=NULL){
         printIndent(indent-1);
         printf("Declaration:\n\n");
-//        for(int i=0; i<indent; ++i){
-//            printf("/========|");
-//        }
         if(decl->name!=NULL) {
             printIndent(indent);
             printf("name: %s", decl->name);
@@ -221,8 +218,12 @@ void printDeclaration(Declaration* decl, int indent){
                 }
             } else if(decl->type==FUNCTION){
                 printParams(decl->params);
-                printf("\n");
+                printf("\n\n");
+                printIndent(indent);
+                printf("Enter code block: \n");
                 printStatement(decl->codeBlock, indent+1);
+                printIndent(indent);
+                printf("Exit code block \n");
             }
             printf(" \n");
         }
