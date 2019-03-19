@@ -10,6 +10,7 @@
 Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, int size,
         Expression* value, Statement* codeBlock, ParamList* params){
     Declaration* temp = malloc(sizeof(Declaration));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->name = name;
     temp->isArray = isArray;
     temp->type = type;
@@ -25,6 +26,7 @@ Declaration* newDeclaration(char* name, bool isArray, int type, int returnType, 
 Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
         Statement* codeBody, Statement* elseBody, Statement* next){
     Statement* temp = malloc(sizeof(Statement));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->type = type;
     temp->decl = decl;
     temp->expr = expr;
@@ -37,6 +39,7 @@ Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
 Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval,
         ArgList* args){
     Expression* temp = malloc(sizeof(Expression));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->type = type;
     temp->left = left;
     temp->right= right;
@@ -51,6 +54,7 @@ Expression* newExpression(int type, Expression* left, Expression* right, char* n
 
 Param* newParam(int type, char* name, Param* next, bool isArray){
     Param* temp = malloc(sizeof(Param));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->type = type;
     temp->name = name;
     temp->next = next;
@@ -60,6 +64,7 @@ Param* newParam(int type, char* name, Param* next, bool isArray){
 
 ParamList* newParamList(Param* param){
     ParamList* temp = malloc(sizeof(ParamList));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->head = temp->tail = param;
     return temp;
 }
@@ -86,12 +91,14 @@ void appendParam(ParamList* paramList, Param* param){
 
 ArgList* newArgList(Argument* arg){
     ArgList* temp = malloc(sizeof(ArgList));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->head = temp->tail = arg;
     return temp;
 }
 
 Argument* newArgument(Argument* next, Expression* expr){
     Argument* temp = malloc(sizeof(Argument));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->next = next;
     temp->expr = expr;
     return temp;
@@ -115,6 +122,7 @@ void appendArgument(ArgList* argList, Argument* arg){
 
 StatementList* newStatementList(Statement* stmt){
     StatementList* temp = malloc(sizeof(StatementList));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->head = temp->tail = stmt;
     return temp;
 }

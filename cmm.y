@@ -6,6 +6,8 @@
 
 int yylex(void);
 void yyerror(const char *);
+
+FILE* output;
 %}
 
 %union {
@@ -230,21 +232,17 @@ Expr			: Primary		{ $$ = $1; /*printExpression($1, 0);*/ }
 
 
 
-Var			: ID			{$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL, NULL);}  //todo symboltable lookup
+Var			: ID			{$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);}  //todo symboltable lookup
 			| ID LSQUARE Expr RSQUARE
 				{
 				// todo check that expression returns an integer
 				// the expression is placed on the left side, nothing on the right
-				$$ = newExpression(NULL, $3, NULL, $1, $3->ival, NULL, NULL);
+				$$ = newExpression(ID, $3, NULL, $1, $3->ival, NULL, NULL);
 				}
 			;
 
 
-Primary			: ID
-				{
-				//printf("there is an ID\n");
-				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);
-				}
+Primary			: Var	{$$ = $1;}
 			| NUMBER
 				{
 				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL);
