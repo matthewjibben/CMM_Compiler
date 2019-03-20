@@ -1,2 +1,8 @@
-//int x = 129 * 2001 + (25 - 7);
+int x = 129 * 2001 + (25 - 7);
 int y = 1 - 3;
+
+int foo(int x, string y){
+    write y;
+    int z = x + 5;
+}
+foo(5, "hello");

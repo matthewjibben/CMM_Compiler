@@ -96,19 +96,15 @@ Declaration		: VarDec	{$$=$1;}
 
 VarDec			: Type ID SEMICOLON
 				{
-				$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
+					$$ = newDeclaration($2, false, $1, NULL, NULL, NULL, NULL, NULL);
 				}
 			| Type ID ASSIGN Expr SEMICOLON
 				{
-					printf("There is a variable declaration\n\n");
 					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL);
-					//printExpression($4, 0);
-					//printDeclaration($$, 0);
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
 				{
-                        	$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL);
-                        	//printDeclaration($$, 0);
+                        		$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL);
                         	}
                         ;
 Type			: INT		{ $$ = INT; }
@@ -118,7 +114,6 @@ Type			: INT		{ $$ = INT; }
 FunDec			: Type ID LPAREN Params RPAREN Block
 				{
 				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, $6, $4);
-				//printDeclaration($$, 0);
 				}
 			;
 Params			: ParamList			{$$=$1;}
@@ -133,9 +128,6 @@ Param			: Type ID			{ $$ = newParam($1, $2, NULL, false); }
 /* the block can have the DecList and StmtList. This allows for new functions to be built in a specific scope. */
 Block			: LBRACK StmtList RBRACK
 				{
-//				printf("**====================================**\n");
-				//printStatementList($2);
-//				printf("**====================================**\n");
 				$$ = $2->head;
 				freeStmtList($2);
 				}
@@ -159,7 +151,6 @@ Stmt			: SEMICOLON		//no operation?
 				}
 			| Expr SEMICOLON	//todo symboltable type lookup
 				{
-				//printExpression($1, 0);
 				$$ = newStatement(STMT_EXPR, NULL, $1, NULL, NULL, NULL);
 				}
 			| READ Var SEMICOLON
@@ -213,20 +204,16 @@ IfStmt			: IF LPAREN Expr RPAREN Stmt
 
 /* =============================================== */
 
-Expr			: Primary		{ $$ = $1; /*printExpression($1, 0);*/ }
+Expr			: Primary		{ $$ = $1; }
 			| Expr RelOp Expr	//todo should type be $2?
 				{
-				printf(">>>>>>>>>>>>>>>>RELOP OP<<<<<<<<<<<<<<<<<<<");
 				$$ = newExpression($2, $1, $3, NULL, NULL, $2, NULL);
-				//printExpression($$, 0);
 				}
 			| Call { $$ = $1; }
 			| SimpleExpr {$$ = $1;}
 			| Var ASSIGN Expr
 				{
-//				printf("made assign expression");
 				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
-//				printf("made assign expressioncomplete\n");
 				}
 			;
 
@@ -246,16 +233,13 @@ Primary			: Var	{$$ = $1;}
 			| NUMBER
 				{
 				$$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL);
-				//printf("there is a NUMBER, %i\n", $1);
 				}
 			| SINGLECHAR
 				{
-				//printf("there is a single character\n");
 				$$ = newExpression(SINGLECHAR, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			| CHARARRAY
 				{
-				//printf("there is a character array\n");
 				$$ = newExpression(CHARARRAY, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			;
@@ -293,7 +277,7 @@ UnaryOp			: NOT {$$ = "!";}
 
 Term			: Term MulOp Factor
 				{
-				if($2 =="*"){
+				if($2 == "*"){
                                 	$$ = newExpression(MULT, $1, $3, NULL, NULL, $2, NULL);
                                 } else if($2 =="/") {
                                 	$$ = newExpression(DIV, $1, $3, NULL, NULL, $2, NULL);
