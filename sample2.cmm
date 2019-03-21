@@ -6,3 +6,5 @@ int foo(int x, string y){
     int z = x + 5;
 }
 foo(5, "hello");
+
+1234.1001;

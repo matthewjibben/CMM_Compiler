@@ -56,6 +56,13 @@ writeln         { adjust(); return WRITELN; }
 return          { adjust(); return RETRN; }
 break           { adjust(); return BREAK; }
 
+float           { adjust(); return FLOAT; }
+bool            { adjust(); return BOOL; }
+
+true            { adjust(); return TRUE; }
+false           { adjust(); return FALSE; }
+
+
 int                     { adjust(); return INT; }
 char		            { adjust(); return CHAR; }
 string                  { adjust(); return STRING; }
@@ -115,9 +122,16 @@ string                  { adjust(); return STRING; }
                                     yylval.sval = strdup(yytext);
                                     return ID; }
 
+{dig}*\.{dig}*                  { adjust();
+                                    yylval.fval = atof(yytext);
+                                    printf(">>>>>>>>>>>>>>>>>>>>>>FVAL:%f<<<<<<<<<<<<<<<<<<<<<<<\n\n\n\n\n\n\n\n\n\n", yylval.fval);
+                                    return FLOATVAL; }
+
 {number}	                    { adjust();
                                     yylval.ival = atoi(yytext);
                                     return NUMBER; }
+
+
 "="		                        { adjust();return ASSIGN; }
 
 

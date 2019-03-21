@@ -50,6 +50,21 @@ Expression* newExpression(int type, Expression* left, Expression* right, char* n
     return temp;
 }
 
+/* new expression struct builder used purely for float values */
+Expression* newExpressionFloat(int type, Expression* left, Expression* right, char* name, float fval, char* sval,
+                               ArgList* args){
+    Expression* temp = malloc(sizeof(Expression));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
+    temp->type = type;
+    temp->left = left;
+    temp->right= right;
+    temp->name = name;
+    temp->fval = fval;
+    temp->sval = sval;
+    temp->args = args;
+    return temp;
+}
+
 /* ================= */
 
 Param* newParam(int type, char* name, Param* next, bool isArray){
@@ -165,8 +180,16 @@ void printExpression(Expression* expr, int indent){
 //            printf("/========|");
 //        }
         printIndent(indent);
-        if(expr->ival!=NULL || expr->type==INT)
+        if(expr->ival!=NULL && expr->type==INT)
             printf("ival: %i ", expr->ival);
+        if(expr->type==FLOAT)
+            printf("fval: %f ", expr->fval);
+        if(expr->type==BOOL) {
+            if(expr->ival)
+                printf("boolean: true ");
+            else
+                printf("boolean: false ");
+        }
         if(expr->sval!=NULL)
             printf("sval: %s ", expr->sval);
         if(expr->name!=NULL) {

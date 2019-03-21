@@ -106,6 +106,7 @@ typedef struct Expression{
     char* name;
     int ival;
     char* sval;
+    float fval;
 
     bool isFunctionCall;
 
@@ -123,6 +124,9 @@ Statement* newStatement(stmtType type, Declaration* decl, Expression* expr,
 Expression* newExpression(int type, Expression* left, Expression* right, char* name, int ival, char* sval,
         ArgList* args);
 
+
+Expression* newExpressionFloat(int type, Expression* left, Expression* right, char* name, float fval, char* sval,
+                               ArgList* args);
 /* ================= */
 
 

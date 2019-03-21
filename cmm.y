@@ -14,6 +14,7 @@ FILE* output;
     int ival;
     char* sval;
     double value;
+    float fval;
     struct Expression* expr;
     struct Statement* stmt;
     struct Declaration* decl;
@@ -41,18 +42,21 @@ FILE* output;
 
 %token LBRACK RBRACK LPAREN RPAREN LSQUARE RSQUARE
 %token INT
-%token CHAR STRING
+%token CHAR STRING BOOL
 %token <sval> CHARARRAY SINGLECHAR
 %token <ival> NUMBER
 %token IF THEN ELSE WHILE
 %token WRITE WRITELN READ RETRN BREAK
 %token ASSIGN MOD //ADD SUB DIV MULT MOD
+%token FLOAT
+%token <fval> FLOATVAL
 
+%token <ival> TRUE FALSE
 
 %type <ival> Type
 %type <decl> VarDec FunDec Declaration
 
-%type <expr> Expr Primary Factor Term SimpleExpr Var Call
+%type <expr> Expr Primary Factor Term SimpleExpr Var Call Boolean
 
 %type <sval> AddOp MulOp RelOp UnaryOp
 
@@ -110,6 +114,8 @@ VarDec			: Type ID SEMICOLON
 Type			: INT		{ $$ = INT; }
 			| CHAR		{ $$ = CHAR; }
 			| STRING	{ $$ = STRING; }
+			| FLOAT		{ $$ = FLOAT; }
+			| BOOL		{ $$ = BOOL; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN Block
 				{
@@ -294,11 +300,17 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Var				{ $$ = $1; }
 			| Call				{ $$ = $1; }
 			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL); }
+			| FLOATVAL		{ printf(">>>>>>>>>>>>>>>>>>>>>>FVAL:%f<<<<<<<<<<<<<<<<<<<<<<<\n\n\n\n\n\n\n\n\n\n", $1);
+			 			  $$ = newExpressionFloat(FLOAT, NULL, NULL, NULL, $1, NULL, NULL); } 	//todo update to take floats
 			| UnaryOp Factor	//todo update this for NOT
 				{
                         	$2->ival = -$2->ival;
                         	$$ = $2;
                         	}
+                        | Boolean
+			;
+Boolean			: TRUE			{ $$ = newExpression(BOOL, NULL, NULL, NULL, 1, NULL, NULL); }
+			| FALSE			{ $$ = newExpression(BOOL, NULL, NULL, NULL, 0, NULL, NULL); }
 			;
 Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				{
