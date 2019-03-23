@@ -180,10 +180,26 @@ void printExpression(Expression* expr, int indent){
 //            printf("/========|");
 //        }
         printIndent(indent);
-        if(expr->ival!=NULL && expr->type==INT)
-            printf("ival: %i ", expr->ival);
-        if(expr->type==FLOAT)
-            printf("fval: %f ", expr->fval);
+        //create negation string
+        //this is only used when an int or float is negated with unary "-"
+        char* negationString;
+        if(expr->isUnaryNegate)
+            negationString = "-";
+        else
+            negationString = "";
+
+        //print if the expression has been given a NOT
+        if(expr->isUnaryNot){
+            printf("NOT ");
+        }
+
+
+        if(expr->ival!=NULL && expr->type==INT) {
+            printf("ival: %s%i ", negationString, expr->ival);
+        }
+        if(expr->type==FLOAT) {
+            printf("fval: %s%f ", negationString, expr->fval);
+        }
         if(expr->type==BOOL) {
             if(expr->ival)
                 printf("boolean: true ");

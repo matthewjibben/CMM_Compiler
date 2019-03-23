@@ -74,14 +74,14 @@ string                  { adjust(); return STRING; }
                           struct Env* temp = malloc(sizeof(struct Env));
                           initEnv(temp, env);
                           env = temp;
-                          printf("entering new scope...\n");
+                          //printf("entering new scope...\n");
 
                           return LBRACK; }
 "}"                     { adjust();
 
                           //print the environment and then delete it
-                          printf("exiting environment:\n");
-                          printEnv(env);
+                          //printf("exiting environment:\n");
+                          //    printEnv(env);
 
                           //deleting
                           struct Env* temp = malloc(sizeof(struct Env));
@@ -124,7 +124,6 @@ string                  { adjust(); return STRING; }
 
 {dig}*\.{dig}*                  { adjust();
                                     yylval.fval = atof(yytext);
-                                    printf(">>>>>>>>>>>>>>>>>>>>>>FVAL:%f<<<<<<<<<<<<<<<<<<<<<<<\n\n\n\n\n\n\n\n\n\n", yylval.fval);
                                     return FLOATVAL; }
 
 {number}	                    { adjust();
@@ -148,6 +147,10 @@ void yyerror(const char *s){
     printf("current word: %s", yytext);
 }
 
+void semError(const char* message){
+    printf("SEMANTIC ERROR on line %i, character %i: %s\n", yylineno, chars, message);
+    printf("current word: %s", yytext);
+}
 
 //int main(int argc, char **argv)
 //{

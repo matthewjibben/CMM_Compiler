@@ -110,6 +110,9 @@ typedef struct Expression{
 
     bool isFunctionCall;
 
+    bool isUnaryNegate;
+    bool isUnaryNot;
+
     ArgList* args;
 } Expression;
 

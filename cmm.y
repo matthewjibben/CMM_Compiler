@@ -58,7 +58,7 @@ FILE* output;
 
 %type <expr> Expr Primary Factor Term SimpleExpr Var Call Boolean
 
-%type <sval> AddOp MulOp RelOp UnaryOp
+%type <sval> AddOp MulOp RelOp //UnaryOp
 
 %type <stmt> Stmt IfStmt WhileStmt RetrnStmt
 %type <stmt> Block
@@ -261,7 +261,7 @@ RelOp			: EQ  {$$ = "==";}
 			| OR  {$$ = "||";}
 			;
 
-SimpleExpr		: SimpleExpr AddOp Term
+SimpleExpr		: SimpleExpr AddOp Term			//todo symboltable lookup if elements are integers or floats
 				{
 				//todo really we should check that the two types are compatible, and use that type
 				if($2 =="+"){
@@ -277,9 +277,9 @@ SimpleExpr		: SimpleExpr AddOp Term
 AddOp			: ADD {$$ = "+";}
 			| SUB {$$ = "-";}
 			;
-UnaryOp			: NOT {$$ = "!";}
-			| SUB {$$ = "-";}
-			;
+//UnaryOp			: NOT {$$ = "!";}
+                         //			| SUB {$$ = "-";}
+                         //			;
 
 Term			: Term MulOp Factor
 				{
@@ -300,12 +300,26 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Var				{ $$ = $1; }
 			| Call				{ $$ = $1; }
 			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL); }
-			| FLOATVAL		{ printf(">>>>>>>>>>>>>>>>>>>>>>FVAL:%f<<<<<<<<<<<<<<<<<<<<<<<\n\n\n\n\n\n\n\n\n\n", $1);
-			 			  $$ = newExpressionFloat(FLOAT, NULL, NULL, NULL, $1, NULL, NULL); } 	//todo update to take floats
-			| UnaryOp Factor	//todo update this for NOT
+			| FLOATVAL		{ $$ = newExpressionFloat(FLOAT, NULL, NULL, NULL, $1, NULL, NULL); }
+			| SUB Factor	//todo update this for NOT
 				{
-                        	$2->ival = -$2->ival;
-                        	$$ = $2;
+				if($2->type == INT || $2->type == FLOAT){
+                        		$2->isUnaryNegate = !$2->isUnaryNegate;
+                        		$$ = $2;
+				} else {
+					semError("Negated value must be of type INT or FLOAT");
+					YYABORT;
+				}
+                        	}
+                        | NOT Factor
+                        	{
+				if($2->type == BOOL || $2->type == INT){
+                        		$2->isUnaryNot = !$2->isUnaryNot;
+                        		$$ = $2;
+				} else {
+					semError("Unary NOTed value must be of type BOOL or INT");
+					YYABORT;
+				}
                         	}
                         | Boolean
 			;
