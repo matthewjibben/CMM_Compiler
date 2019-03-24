@@ -193,8 +193,8 @@ void printExpression(Expression* expr, int indent){
             printf("NOT ");
         }
 
-
-        if(expr->ival!=NULL && expr->type==INT) {
+        //only  print the ival if it is set and it is not an operation such as "+"
+        if(expr->ival!=NULL || expr->type==INT && expr->sval==NULL) {
             printf("ival: %s%i ", negationString, expr->ival);
         }
         if(expr->type==FLOAT) {
@@ -249,7 +249,9 @@ void printDeclaration(Declaration* decl, int indent){
         printf("Declaration:\n\n");
         if(decl->name!=NULL) {
             printIndent(indent);
-            printf("name: %s", decl->name);
+            printf("type: ");
+            printTypeString(decl->type);
+            printf(" name: %s", decl->name);
             if(decl->isArray) {
                 printf("[%i]", decl->size);
                 if(decl->size!=NULL) {
@@ -401,6 +403,9 @@ void printTypeString(int typeToken){
     }
     else if(typeToken==STRING){
         printf("string");
+    }
+    else if(typeToken==FLOAT){
+        printf("float");
     }
 }
 

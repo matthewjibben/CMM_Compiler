@@ -6,7 +6,10 @@
 int chars = 0;
 
 // declare the global environment
-Env* env;
+//struct Env* env;
+//env = newEnvironment(NULL);
+
+extern Env* env;
 
 /* adjust function, updates the chars value based on the lexeme */
 void adjust(){
@@ -71,21 +74,22 @@ string                  { adjust(); return STRING; }
 "{"                     { adjust();
 
                           // create new environment and enter it
-                          struct Env* temp = malloc(sizeof(struct Env));
-                          initEnv(temp, env);
-                          env = temp;
-                          //printf("entering new scope...\n");
+                          //struct Env* temp = malloc(sizeof(struct Env));
+                          //initEnv(temp, env);
+                          //env = temp;
+                          env = newEnvironment(env);
+                          printf("entering new scope...\n");
 
                           return LBRACK; }
 "}"                     { adjust();
 
                           //print the environment and then delete it
-                          //printf("exiting environment:\n");
-                          //    printEnv(env);
+                          printf("exiting environment:\n");
+                          printEnv(env);
 
                           //deleting
-                          struct Env* temp = malloc(sizeof(struct Env));
-                          temp = env;
+                          //struct Env* temp = malloc(sizeof(struct Env));
+                          Env* temp = env;
                           env = env->prev;
                           freeEnv(temp);
 

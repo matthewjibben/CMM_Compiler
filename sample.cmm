@@ -29,6 +29,8 @@ string myfunc(int a[], string b, char c){
     // comments?
     return "thestring";
 }
+int z = 12;
+
 if(z == 10){
     write z;
     string buildString(int i, string j){

@@ -7,28 +7,40 @@
 
 // =======================   Symbol    =======================
 void deleteSym(struct Symbol* sym){
-    free(sym->id);
-    free(sym->type);
-    free(sym->value);
+//    free(sym->id);
+//    free(sym->type);
+//    free(sym->value);
     free(sym);
 }
 // =======================   Symbol    =======================
 
 
 // ======================= Environment =======================
-void initEnv(struct Env* env, struct Env* previous){
+//void initEnv(struct Env* env, struct Env* previous){
+//    //set the size to 0, it will be changed once we make insertions
+//    env->size = 0;
+//    //The table currently has no elements, the array will be increased as needed
+//    env->prev = previous;
+//    env->head = env->tail = NULL;
+//}
+
+Env* newEnvironment(struct Env* previous){
+    Env* temp = malloc(sizeof(struct Env));
+    if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     //set the size to 0, it will be changed once we make insertions
-    env->size = 0;
+    temp->size = 0;
     //The table currently has no elements, the array will be increased as needed
-    env->prev = previous;
-    env->head = env->tail = NULL;
+    temp->prev = previous;
+    temp->head = temp->tail = NULL;
+    return temp;
 }
 
-int insertEntry(struct Env* env, char* id, char* type, char* value){
+int insertEntry(struct Env* env, Declaration* decl){
     struct Symbol* temp = malloc(sizeof(struct Symbol));
-    temp->id = id;
-    temp->type = type;
-    temp->value = value;
+//    temp->id = id;
+//    temp->type = type;
+//    temp->value = value;
+    temp->decl = decl;
     temp->next = NULL;
     temp->prev = NULL;
 
@@ -53,7 +65,7 @@ struct Symbol* lookup(struct Env* env, char* id){
     for(struct Env* tempenv = env; tempenv != NULL; tempenv = tempenv->prev){
         // search through the table by traversing the linked list
         for(struct Symbol* temp = env->head; temp!=NULL; temp = temp->next){
-            if(temp->id == id){
+            if(temp->decl->name == id){
                 return temp;
             }
         }
@@ -92,7 +104,8 @@ void printEnv(struct Env* env){
         printf("============Size: %i=============\n", env->size);
         for (int i = 0; i < env->size; ++i) {
             printf("====================================\n");
-            printf("%s\t%s\t%s\n", temp->id, temp->type, temp->value);
+            //printf("%s\t%s\t%s\n", temp->id, temp->type, temp->value);
+            printDeclaration(temp->decl, 0);
             temp = temp->next;
         }
         printf("====================================\n");
@@ -102,23 +115,23 @@ void printEnv(struct Env* env){
     }
 }
 
-void updateVal(struct Env* env, char* id, char* newval){
+void updateVal(struct Env* env, char* id, char* newval){        //todo update value expression?
     // use lookup to find if the id exists
     // if it does, delete the current value and replace it with the new one
     struct Symbol* sym = lookup(env, id);
     if(sym!=NULL) {
-        free(sym->value);
-        sym->value = newval;
+        //free(sym->value);
+        //sym->value = newval;
     }
 }
 
-void updateType(struct Env* env, char* id, char* newtype){
+void updateType(struct Env* env, char* id, int newtype){
     // use lookup to find if the id exists
     // if it does, delete the current value and replace it with the new one
     struct Symbol* sym = lookup(env, id);
     if(sym!=NULL) {
-        free(sym->value);
-        sym->type = newtype;
+        //free(sym->value);
+        sym->decl->type = newtype;
     }
 }
 
@@ -133,6 +146,6 @@ void freeEnv(struct Env* env){
         deleteSym(temp);
     }
     env->size = 0;
-    //free(env);
+    free(env);
 }
 // ======================= Environment =======================

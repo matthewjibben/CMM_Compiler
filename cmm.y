@@ -3,11 +3,15 @@
 #include <stdlib.h>
 #define YYDEBUG 1
 #include "ast.h"
+#include "symboltable.h"
 
 int yylex(void);
-void yyerror(const char *);
-
+void yyerror(const char*);
+void semError(const char*);
 FILE* output;
+
+Env* env;
+
 %}
 
 %union {
@@ -86,7 +90,10 @@ FILE* output;
 progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
-				printStatement($1->head, 0);
+				//printStatement($1->head, 0);
+				//print global environment
+				printEnv(env);
+
 				freeStatement($1->head);
 				freeStmtList($1);
 				}
@@ -187,6 +194,8 @@ Stmt			: SEMICOLON		//no operation?
 			| IfStmt	{$$=$1;}
 			| Declaration
 				{
+				// create the statement and add the declaration to the current environment
+				insertEntry(env, $1);
 				$$=newStatement(STMT_DECL, $1, NULL, NULL, NULL, NULL);
 				}
 			;
