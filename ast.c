@@ -259,6 +259,8 @@ void printDeclaration(Declaration* decl, int indent){
                 }
             } else if(decl->type==FUNCTION){
                 printParams(decl->params);
+                printf("return: ");
+                printTypeString(decl->returnType);
                 printf("\n\n");
                 printIndent(indent);
                 printf("Enter code block: \n");
@@ -407,6 +409,12 @@ void printTypeString(int typeToken){
     else if(typeToken==FLOAT){
         printf("float");
     }
+    else if(typeToken==FUNCTION){
+        printf("function");
+    }
+//    else if(typeToken==FLOAT){
+//        printf("float");
+//    }
 }
 
 /* ======================================= */

@@ -90,7 +90,7 @@ Env* env;
 progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
-				//printStatement($1->head, 0);
+				printStatement($1->head, 0);
 				//print global environment
 				printEnv(env);
 

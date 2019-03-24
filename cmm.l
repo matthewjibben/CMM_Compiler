@@ -72,12 +72,9 @@ string                  { adjust(); return STRING; }
 
 
 "{"                     { adjust();
-
                           // create new environment and enter it
-                          //struct Env* temp = malloc(sizeof(struct Env));
-                          //initEnv(temp, env);
-                          //env = temp;
-                          env = newEnvironment(env);
+                          Env* temp = newEnvironment(env);
+                          env = temp;
                           printf("entering new scope...\n");
 
                           return LBRACK; }
@@ -88,7 +85,6 @@ string                  { adjust(); return STRING; }
                           printEnv(env);
 
                           //deleting
-                          //struct Env* temp = malloc(sizeof(struct Env));
                           Env* temp = env;
                           env = env->prev;
                           freeEnv(temp);

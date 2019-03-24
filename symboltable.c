@@ -1,6 +1,7 @@
 //
 // Created by Matthew Jibben on 2/3/2019.
 //
+#include <string.h>
 #include "symboltable.h"
 //#include "cmm.tab.h"
 
@@ -61,15 +62,22 @@ int insertEntry(struct Env* env, Declaration* decl){
 }
 
 struct Symbol* lookup(struct Env* env, char* id){
+    //printf("search start...\n");
     // lookup through each environment until we find the id
     for(struct Env* tempenv = env; tempenv != NULL; tempenv = tempenv->prev){
+        //printf("new env\n");
+        //printEnv(tempenv);
         // search through the table by traversing the linked list
-        for(struct Symbol* temp = env->head; temp!=NULL; temp = temp->next){
-            if(temp->decl->name == id){
+        for(struct Symbol* temp = tempenv->head; temp!=NULL; temp = temp->next){
+            //printf("|%s|\n", temp->decl->name);
+            if(strcmp(temp->decl->name, id)==0){
+                //printf("The value has been found\n");
                 return temp;
             }
         }
     }
+
+    printf("The value has not been found\n");
     // if the value is never reached
     return NULL;
 }
@@ -104,8 +112,24 @@ void printEnv(struct Env* env){
         printf("============Size: %i=============\n", env->size);
         for (int i = 0; i < env->size; ++i) {
             printf("====================================\n");
-            //printf("%s\t%s\t%s\n", temp->id, temp->type, temp->value);
-            printDeclaration(temp->decl, 0);
+            // print all necessary information here
+            printIndent(0);
+            if(temp->decl->name!=NULL) {
+                printf("type: ");
+                printTypeString(temp->decl->type);
+                printf(" name: %s", temp->decl->name);
+                if (temp->decl->isArray) {
+                    printf("[%i]", temp->decl->size);
+                    if (temp->decl->size != NULL) {
+                        printf(" size: %i", temp->decl->size);
+                    }
+                } else if (temp->decl->type == FUNCTION) {
+                    printParams(temp->decl->params);
+                    printf("return: ");
+                    printTypeString(temp->decl->returnType);
+                }
+                printf(" \n");
+            }
             temp = temp->next;
         }
         printf("====================================\n");
@@ -135,7 +159,7 @@ void updateType(struct Env* env, char* id, int newtype){
     }
 }
 
-// takes as input an environment, and frees all variables held in it
+// takes as input an environment, and frees all necessary structs
 // this is used when a scope is completed
 void freeEnv(struct Env* env){
     // search through the table by traversing the linked list

@@ -14,9 +14,14 @@ string myfunc(int a[], string b, char c){
     else {
         write "hi2";
     }
+    int jkl;
+    {
+    char xtest;
     while(x > 10){
+        int aj;
         write x;
         break;
+    }
     }
     int x[12];
     int y[10];
