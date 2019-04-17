@@ -85,15 +85,17 @@ int main() {
     int extra = (1 * 2) + 5 / n;
     2 > 3;
     int g = 7;
-    if ( g == 7 ) {
+    bool x3 = !true;
+    if ( g == 7 || x3 ) {
         string d = "heyo";
         read d;
         writeln;
         while(true || !false){
-            write 123;
+            if(10+3>30){
+                write 123;
+            }
         }
     }
-    bool x3 = !true;
     x;
     string adf = "mysval123";
     float x4 = 1.0;

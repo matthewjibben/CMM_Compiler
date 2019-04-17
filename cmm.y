@@ -294,6 +294,15 @@ RetrnStmt		: RETRN Expr SEMICOLON	{ $$ = newStatement(STMT_RETRN, NULL, $2, NULL
 			;
 WhileStmt		: WHILE LPAREN Expr RPAREN
 				{
+				//SEMANTIC CHECK #11
+				// Expressions used in if and while statements must be either booleans or ints
+				// if they are an integer, it is treated that 0=false and non-zero=true
+				if($3->type != INT && $3->type != BOOL){
+					char* exprType = getTypeString($3->type);
+					semError("Expected either integer or boolean in while statement, got %s", exprType);
+					YYABORT;
+				}
+
 				$$ = newStatement(STMT_WHILE, NULL, $3, NULL, NULL, NULL);
 				Env* temp = newEnvironment(env);
                                 env = temp;
@@ -303,10 +312,28 @@ WhileStmt		: WHILE LPAREN Expr RPAREN
 			;
 IfStmt			: IF LPAREN Expr RPAREN Stmt
 				{
+				//SEMANTIC CHECK #11
+				// Expressions used in if and while statements must be either booleans or ints
+				// if they are an integer, it is treated that 0=false and non-zero=true
+				if($3->type != INT && $3->type != BOOL){
+					char* exprType = getTypeString($3->type);
+					semError("Expected either integer or boolean in if statement, got %s", exprType);
+					YYABORT;
+				}
+
 				$$ = newStatement(STMT_IF, NULL, $3, $5, NULL, NULL);
 				}
 			| IF LPAREN Expr RPAREN Stmt ELSE Stmt
 				{
+				//SEMANTIC CHECK #11
+				// Expressions used in if and while statements must be either booleans or ints
+				// if they are an integer, it is treated that 0=false and non-zero=true
+				if($3->type != INT && $3->type != BOOL){
+					char* exprType = getTypeString($3->type);
+					semError("Expected either integer or boolean in if statement, got %s", exprType);
+					YYABORT;
+				}
+
                                 $$ = newStatement(STMT_IF_ELSE, NULL, $3, $5, $7, NULL);
                                 }
 			;
