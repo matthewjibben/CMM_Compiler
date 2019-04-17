@@ -34,6 +34,8 @@ void deleteSym(struct Symbol* sym);
 // ======================= Environment =======================
 typedef struct Env{
     int size;
+    int type;       // environment type: 0 for global, 1 for normal, otherwise it is set to a token value
+    Declaration* decl;      // declaration used for environments created by function declarations
     struct Symbol* head;    // head of the linked list of symbols
     struct Symbol* tail;
     struct Env* prev;

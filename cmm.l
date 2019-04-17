@@ -10,7 +10,7 @@ int chars = 0;
 //struct Env* env;
 //env = newEnvironment(NULL);
 
-extern bool funcDeclarationSwitch;
+extern bool envStartSwitch;
 extern Env* env;
 
 /* adjust function, updates the chars value based on the lexeme */
@@ -74,14 +74,15 @@ string                  { adjust(); return STRING; }
 
 
 "{"                     { adjust();
-                          // only enter the new environment if the funcDeclarationSwitch is false
+                          // only enter the new environment if the envStartSwitch is false
                           // this ensures that the function parameters are stored in the right environment
-                          if(funcDeclarationSwitch){
-                                funcDeclarationSwitch = false;
+                          if(envStartSwitch){
+                                envStartSwitch = false;
                           } else {
                               // create new environment and enter it
                               Env* temp = newEnvironment(env);
                               env = temp;
+                              env->type = 1;
                               printf("entering new scope...\n");
                           }
 

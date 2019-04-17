@@ -12,7 +12,7 @@ void semError(const char*, ...);
 FILE* output;
 
 Env* env;
-bool funcDeclarationSwitch = false;
+bool envStartSwitch = false;
 
 %}
 
@@ -92,7 +92,7 @@ bool funcDeclarationSwitch = false;
 progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
-				printStatement($1->head, 0);
+//				printStatement($1->head, 0);
 				//print global environment
 				printEnv(env);
 
@@ -152,7 +152,9 @@ FunDec			: Type ID LPAREN Params RPAREN
 				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, NULL, $4);
 				Env* temp = newEnvironment(env);
 				env = temp;
-				funcDeclarationSwitch = true;
+				env->type = FUNCTION;
+				env->decl = $$;
+				envStartSwitch = true;
 				// add the parameters to the new environment
 				if($4 != NULL){
 					Param* temp = $4->head;
@@ -174,7 +176,7 @@ ParamList		: ParamList COMMA Param		{ appendParam($1, $3); }
 Param			: Type ID			{ $$ = newParam($1, $2, NULL, false); }
 			| Type ID LSQUARE RSQUARE	{ $$ = newParam($1, $2, NULL, true); }
 			;
-/* the block can have the DecList and StmtList. This allows for new functions to be built in a specific scope. */
+/* the block can have the StmtList. This allows for new functions to be built in a specific scope. */
 Block			: LBRACK StmtList RBRACK
 				{
 				$$ = $2->head;
@@ -225,8 +227,44 @@ Stmt			: SEMICOLON		//no operation?
 				{
 				$$ = newStatement(STMT_BLOCK, NULL, NULL, $1, NULL, NULL);
 				}
-			| RetrnStmt 	{$$=$1;}
-			| WhileStmt	{$$=$1;}
+			| RetrnStmt
+				{
+				//SEMANTIC CHECK #7+8
+				//Return statements are always inside a function and match the return type
+				//traverse backwards through each environment, checking for a function
+				//if the global scope is reached, then we are not inside a function
+				Env* tempenv = env;
+				while(tempenv!=NULL){
+					if(tempenv->type == 0){
+						//global environment reached, issue error
+						semError("Return statement not inside function body");
+						YYABORT;
+					}
+					if(tempenv->type == FUNCTION){
+						//function found, check return type
+						if($1->expr == NULL) {
+							char* declType = getTypeString(tempenv->decl->returnType);
+							semError("Expected return type %s, got none", declType);
+							YYABORT;
+						}
+						else if(tempenv->decl->returnType != $1->expr->type){
+							char* declType = getTypeString(tempenv->decl->returnType);
+							char* exprType = getTypeString($1->expr->type);
+							semError("Expected return type %s, got %s", declType, exprType);
+							YYABORT;
+						}
+						break;
+					}
+					tempenv = tempenv->prev;
+				}
+
+				$$=$1;
+				}
+			| WhileStmt Block
+				{
+				$1->codeBody = $2;
+				$$=$1;
+				}
 			| IfStmt	{$$=$1;}
 			| Declaration
 				{
@@ -247,9 +285,13 @@ Stmt			: SEMICOLON		//no operation?
 RetrnStmt		: RETRN Expr SEMICOLON	{ $$ = newStatement(STMT_RETRN, NULL, $2, NULL, NULL, NULL); }
 			| RETRN SEMICOLON	{ $$ = newStatement(STMT_RETRN, NULL, NULL, NULL, NULL, NULL); }	//could be removed?
 			;
-WhileStmt		: WHILE LPAREN Expr RPAREN Stmt
+WhileStmt		: WHILE LPAREN Expr RPAREN
 				{
-				$$ = newStatement(STMT_WHILE, NULL, $3, $5, NULL, NULL);
+				$$ = newStatement(STMT_WHILE, NULL, $3, NULL, NULL, NULL);
+				Env* temp = newEnvironment(env);
+                                env = temp;
+                                env->type = WHILE;
+                                envStartSwitch = true;
 				}
 			;
 IfStmt			: IF LPAREN Expr RPAREN Stmt

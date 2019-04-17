@@ -27,8 +27,10 @@ int main(int argc, char **argv)
 
 //    output = fopen("./output.asm", "w");
 //    fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
+
     // create initial global environment
     env = newEnvironment(NULL);
+    env->type = 0; //global type
     //Declaration* decl1 = newDeclaration("testName", false, STRING, NULL, NULL, NULL, NULL, NULL);
     //Env* env = newEnvironment(NULL);
     //insertEntry(env, decl1);
