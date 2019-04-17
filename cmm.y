@@ -128,6 +128,13 @@ VarDec			: Type ID SEMICOLON
 						semError("Variable of type %s cannot be assigned to %s", varType, exprType);
 						YYABORT;
 					}
+
+					//SEMANTIC CHECK
+					//variable cannot be assigned to an entire array
+					if($4->isArray){
+						semError("Variable cannot be assigned to an entire array");
+						YYABORT;
+					}
 					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL);
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
@@ -326,6 +333,12 @@ Expr			: Primary		{ $$ = $1; }
 					semError("Variable of type %s cannot be assigned to %s", varType, exprType);
 					YYABORT;
 				}
+				//SEMANTIC CHECK
+				//variable cannot be assigned to an entire array
+				if($3->isArray){
+					semError("Variable cannot be assigned to an entire array");
+					YYABORT;
+				}
 				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
 				}	// todo should the type be of the assigned variables?
 			;
@@ -360,10 +373,27 @@ Var			: ID
 				    YYABORT;
 				}
 
-				// todo check that expression returns an integer
+				//SEMANTIC CHECK #10:
+				// check that the ID is an array
+				if(idSymbol->decl->isArray != true){
+					semError("Variable %s is not an array", $1);
+					YYABORT;
+				}
+				// check that expression returns an integer
+				if($3->type != INT){
+					char* exprType = getTypeString($3->type);
+					semError("Expected integer in array index, got %s", exprType);
+					YYABORT;
+				}
+				// check that an array is not passed into the index
+				if($3->isArray){
+					semError("Expected integer in array index, got array");
+					YYABORT;
+				}
+
 				// the expression is placed on the left side, nothing on the right
 				$$ = newExpression(idSymbol->decl->type, $3, NULL, $1, $3->ival, NULL, NULL);			//todo should $3->ival be here?
-				$$->isArray = idSymbol->decl->isArray;
+				//$$->isArray = idSymbol->decl->isArray;
 
 
 				}
