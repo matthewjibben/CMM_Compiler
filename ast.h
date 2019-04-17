@@ -17,6 +17,7 @@
 typedef struct ParamList{
     struct Param* head;
     struct Param* tail;
+    int size;
 } ParamList;
 
 typedef struct Param {
@@ -32,6 +33,7 @@ typedef struct Param {
 typedef struct ArgList {
     struct Argument* head;
     struct Argument* tail;
+    int size;
 } ArgList;
 
 typedef struct Argument {
@@ -100,6 +102,7 @@ typedef struct StatementList{
 
 typedef struct Expression{
     int type;
+    bool isArray;
     struct Expression* left;
     struct Expression* right;
 
@@ -150,7 +153,9 @@ void printStatement(Statement* stmt, int indent);
 void printDeclaration(Declaration* decl, int indent);
 void printParams(ParamList* params);
 void printIndent(int indent);
+
 void printTypeString(int typeToken);
+char* getTypeString(int typeToken);
 /* ================= */
 
 Param* newParam(int type, char* name, Param* next, bool isArray);

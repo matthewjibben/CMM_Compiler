@@ -81,6 +81,10 @@ ParamList* newParamList(Param* param){
     ParamList* temp = malloc(sizeof(ParamList));
     if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->head = temp->tail = param;
+    temp->size = 0;
+    if(temp->head != NULL){
+        temp->size++;
+    }
     return temp;
 }
 
@@ -95,6 +99,8 @@ void appendParam(ParamList* paramList, Param* param){
         else {
             paramList->head = paramList->tail = param;
         }
+        paramList->size++;
+//        printf("paramlist size: %i", paramList->size);
     }
     else{
         printf("paramList list is null! this should not happen!");
@@ -108,6 +114,10 @@ ArgList* newArgList(Argument* arg){
     ArgList* temp = malloc(sizeof(ArgList));
     if(temp==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     temp->head = temp->tail = arg;
+    temp->size = 0;
+    if(temp->head != NULL){
+        temp->size++;
+    }
     return temp;
 }
 
@@ -127,6 +137,7 @@ void appendArgument(ArgList* argList, Argument* arg){
         } else {
             argList->head = argList->tail = arg;
         }
+        argList->size++;
     }
     else {
         printf("argList list is null! this should not happen!");
@@ -263,10 +274,10 @@ void printDeclaration(Declaration* decl, int indent){
                 printTypeString(decl->returnType);
                 printf("\n\n");
                 printIndent(indent);
-                printf("Enter code block: \n");
-                printStatement(decl->codeBlock, indent+1);
-                printIndent(indent);
-                printf("Exit code block \n");
+//                printf("Enter code block: \n");
+//                printStatement(decl->codeBlock, indent+1);
+//                printIndent(indent);
+//                printf("Exit code block \n");
             }
             printf(" \n");
         }
@@ -415,9 +426,27 @@ void printTypeString(int typeToken){
     else if(typeToken==BOOL){
         printf("boolean");
     }
-//    else if(typeToken==FLOAT){
-//        printf("float");
-//    }
+}
+//same as printtypestring, but returns the string
+char* getTypeString(int typeToken){
+    if(typeToken==INT){
+        return "int";
+    }
+    else if(typeToken==CHAR){
+        return "char";
+    }
+    else if(typeToken==STRING){
+        return "string";
+    }
+    else if(typeToken==FLOAT){
+        return "float";
+    }
+    else if(typeToken==FUNCTION){
+        return "function";
+    }
+    else if(typeToken==BOOL){
+        return "boolean";
+    }
 }
 
 /* ======================================= */

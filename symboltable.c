@@ -90,7 +90,7 @@ struct Symbol* lookupCurrentEnv(struct Env* env, char* id){
             return temp;
         }
     }
-    printf("The value has not been found\n");
+    //printf("The value has not been found\n");
     // if the value is never reached
     return NULL;
 }
@@ -138,6 +138,7 @@ void printEnv(struct Env* env){
                     }
                 } else if (temp->decl->type == FUNCTION) {
                     printParams(temp->decl->params);
+                    printf("Param size: %i ", temp->decl->params->size);
                     printf("return: ");
                     printTypeString(temp->decl->returnType);
                 }

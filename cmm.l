@@ -48,8 +48,8 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 [ \t\r\f]  		{ adjust(); /* whitespace, do nothing */ }
 \/[\/]+.*           { adjust(); /* code comment, do nothing */ }
 
-\"(.)\"         { adjust(); yylval.sval = strdup(yytext); return SINGLECHAR; }
-\"(.*?)\"       { adjust(); yylval.sval = strdup(yytext); return CHARARRAY; }
+\"[^\"\n]\"     { adjust(); yylval.sval = strdup(yytext); return SINGLECHAR; }
+\"([^\"\n]*)\"  { adjust(); yylval.sval = strdup(yytext); return CHARARRAY; }
 
 
 if              { adjust(); return IF; }

@@ -121,6 +121,12 @@ VarDec			: Type ID SEMICOLON
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
 				{
+					//SEMANTIC CHECK #4
+					//The int identifier cannot be 0 or negative
+					if($4 <= 0){
+						semError("Array size must be greater than 0");
+						YYABORT;
+					}
                         		$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL);
                         	}
                         ;
@@ -149,7 +155,7 @@ FunDec			: Type ID LPAREN Params RPAREN
 				}
 			;
 Params			: ParamList			{$$=$1;}
-			| /* epsilon */			{$$=NULL;}
+			| /* epsilon */			{$$=newParamList(NULL);}
 			;
 ParamList		: ParamList COMMA Param		{ appendParam($1, $3); }
 			| Param				{ $$ = newParamList($1); }
@@ -223,6 +229,7 @@ Stmt			: SEMICOLON		//no operation?
 
 				// create the statement and add the declaration to the current environment
 				insertEntry(env, $1);
+//				printDeclaration($1, 0);
 				$$=newStatement(STMT_DECL, $1, NULL, NULL, NULL, NULL);
 				}
 			;
@@ -263,30 +270,38 @@ Expr			: Primary		{ $$ = $1; }
 
 Var			: ID
 				{
-				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);
-
 				//SEMANTIC CHECK #2:
 				//No ID can be used before it is declared
 				//do a full symbol table lookup and check that the ID is declared
-				if(lookup(env, $1)==NULL){
+				Symbol* idSymbol = lookup(env, $1);
+				if(idSymbol==NULL){
 				    semError("Variable %s has not been declared", $1);
 				    YYABORT;
 				}
+
+
+				$$ = newExpression(idSymbol->decl->type, NULL, NULL, $1, NULL, NULL, NULL);
+				$$->isArray = idSymbol->decl->isArray;
+
 
 				}  //todo symboltable lookup
 			| ID LSQUARE Expr RSQUARE
 				{
-				// todo check that expression returns an integer
-				// the expression is placed on the left side, nothing on the right
-				$$ = newExpression(ID, $3, NULL, $1, $3->ival, NULL, NULL);
-
 				//SEMANTIC CHECK #2:
 				//No ID can be used before it is declared
 				//do a full symbol table lookup and check that the ID is declared
-				if(lookup(env, $1)==NULL){
+				Symbol* idSymbol = lookup(env, $1);
+				if(idSymbol==NULL){
 				    semError("Variable %s has not been declared", $1);
 				    YYABORT;
 				}
+
+				// todo check that expression returns an integer
+				// the expression is placed on the left side, nothing on the right
+				$$ = newExpression(idSymbol->decl->type, $3, NULL, $1, $3->ival, NULL, NULL);			//todo should $3->ival be here?
+				$$->isArray = idSymbol->decl->isArray;
+
+
 				}
 			;
 
@@ -298,11 +313,11 @@ Primary			: Var	{$$ = $1;}
 				}
 			| SINGLECHAR
 				{
-				$$ = newExpression(SINGLECHAR, NULL, NULL, NULL, NULL, $1, NULL);
+				$$ = newExpression(CHAR, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			| CHARARRAY
 				{
-				$$ = newExpression(CHARARRAY, NULL, NULL, NULL, NULL, $1, NULL);
+				$$ = newExpression(STRING, NULL, NULL, NULL, NULL, $1, NULL);
 				}
 			;
 
@@ -390,16 +405,49 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				//SEMANTIC CHECK #2:
 				//No ID can be used before it is declared
 				//do a full symbol table lookup and check that the ID is declared
-				if(lookup(env, $1)==NULL){
+				Symbol* funcSymbol = lookup(env, $1);
+				if(funcSymbol==NULL){
 				    semError("Function \"%s\" has not been declared", $1);
 				    YYABORT;
+				}
+
+
+				//SEMANTIC CHECK #5:
+				// function call arguments must match the function declaration parameters
+				// first check that the argument and parameter sizes are the same
+				if(funcSymbol->decl->params->size != $3->size){
+					semError("Function call (%i) must have the same number of parameters as the function declaration (%i)", $3->size, funcSymbol->decl->params->size);
+					YYABORT;
+				}
+				//loop through the arglist and the paramlist, checking each type
+				if($3->size > 0){
+					Argument* tempArg = $3->head;
+					Param* tempParam = funcSymbol->decl->params->head;
+					//at this point we know that both have the same size
+					while(tempArg != NULL){
+						//check that the types are the same
+						if(tempParam->type != tempArg->expr->type){
+							char* paramType = getTypeString(tempParam->type);
+							char* argType = getTypeString(tempArg->expr->type);
+//							semError("no");
+							semError("Parameter type mismatch: %s is not %s", argType, paramType);
+							YYABORT;
+						}
+						//do a symbol table lookup to get the variable if it is one
+
+						tempArg = tempArg->next;
+						tempParam = tempParam->next;
+					}
+
 				}
 				}
 			;
 Args			: ArgList		{$$=$1;}
-			| /* epsilon */		{$$=NULL;}
+			| /* epsilon */		{$$=newArgList(NULL);}
 			;
-ArgList			: ArgList COMMA Expr	{ appendArgument($1, newArgument(NULL, $3)); }
+ArgList			: ArgList COMMA Expr	{
+						appendArgument($1, newArgument(NULL, $3));
+						}
 			| Expr
 				{
 				$$ = newArgList(newArgument(NULL, $1));
