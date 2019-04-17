@@ -92,7 +92,7 @@ bool funcDeclarationSwitch = false;
 progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
-				//printStatement($1->head, 0);
+				printStatement($1->head, 0);
 				//print global environment
 				printEnv(env);
 
@@ -117,6 +117,17 @@ VarDec			: Type ID SEMICOLON
 				}
 			| Type ID ASSIGN Expr SEMICOLON
 				{
+					//SEMANTIC CHECK #6
+					// make sure that the assigned expression type matches the vairable
+					// if it is a function call, ensure the return type is the same as the variable
+					// the symboltable lookup has already been performed in Var
+					//  check that the types match, however integers and floats can be set to each other
+					if($1 != $4->type && !((($1 == INT) || ($1 == FLOAT)) && (($4->type == INT) || ($4->type == FLOAT))) ){
+						char* varType = getTypeString($1);
+						char* exprType = getTypeString($4->type);
+						semError("Variable of type %s cannot be assigned to %s", varType, exprType);
+						YYABORT;
+					}
 					$$ = newDeclaration($2, false, $1, NULL, NULL, $4, NULL, NULL);
 				}
 			| Type ID LSQUARE NUMBER RSQUARE SEMICOLON
@@ -254,16 +265,27 @@ IfStmt			: IF LPAREN Expr RPAREN Stmt
 /* =============================================== */
 
 Expr			: Primary		{ $$ = $1; }
-			| Expr RelOp Expr	//todo should type be $2?
+			| Expr RelOp Expr	//todo should type be $2? or bool?
 				{
-				$$ = newExpression($2, $1, $3, NULL, NULL, $2, NULL);
+				$$ = newExpression(BOOL, $1, $3, NULL, NULL, $2, NULL);
 				}
 			| Call { $$ = $1; }
 			| SimpleExpr {$$ = $1;}
 			| Var ASSIGN Expr
 				{
-				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
+				//SEMANTIC CHECK #6
+				// make sure that the assigned expression type matches the vairable
+				// if it is a function call, ensure the return type is the same as the variable
+				// the symboltable lookup has already been performed in Var
+				//  check that the types match, however integers and floats can be set to each other
+				if($1->type != $3->type && !((($1->type == INT) || ($1->type == FLOAT)) && (($3->type == INT) || ($3->type == FLOAT))) ){
+					char* varType = getTypeString($1->type);
+					char* exprType = getTypeString($3->type);
+					semError("Variable of type %s cannot be assigned to %s", varType, exprType);
+					YYABORT;
 				}
+				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
+				}	// todo should the type be of the assigned variables?
 			;
 
 
@@ -335,10 +357,16 @@ RelOp			: EQ  {$$ = "==";}
 SimpleExpr		: SimpleExpr AddOp Term			//todo symboltable lookup if elements are integers or floats
 				{
 				//todo really we should check that the two types are compatible, and use that type
+				int type;
+				if($1->type == FLOAT || $3->type == FLOAT){
+					type = FLOAT;
+				} else {
+					type = INT;
+				}
 				if($2 =="+"){
-					$$ = newExpression(ADD, $1, $3, NULL, NULL, $2, NULL);
+					$$ = newExpression(type, $1, $3, NULL, NULL, $2, NULL);
 				} else if($2 =="-") {
-					$$ = newExpression(SUB, $1, $3, NULL, NULL, $2, NULL);
+					$$ = newExpression(type, $1, $3, NULL, NULL, $2, NULL);
 				}
 				}
 
@@ -354,10 +382,16 @@ AddOp			: ADD {$$ = "+";}
 
 Term			: Term MulOp Factor
 				{
+				int type;
+				if($1->type == FLOAT || $3->type == FLOAT){
+					type = FLOAT;
+				} else {
+					type = INT;
+				}
 				if($2 == "*"){
-                                	$$ = newExpression(MULT, $1, $3, NULL, NULL, $2, NULL);
+                                	$$ = newExpression(type, $1, $3, NULL, NULL, $2, NULL);
                                 } else if($2 =="/") {
-                                	$$ = newExpression(DIV, $1, $3, NULL, NULL, $2, NULL);
+                                	$$ = newExpression(type, $1, $3, NULL, NULL, $2, NULL);
                                 }
                                 }
 			| Factor {$$ = $1;}
@@ -368,8 +402,22 @@ MulOp 			: MULT {$$ = "*";}
 
 
 Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
-			| Var				{ $$ = $1; }
-			| Call				{ $$ = $1; }
+			| Var
+				{
+				$$ = $1;
+				if($$->type == CHAR || $$->type == STRING || $$->type == BOOL) {
+					semError("Math expression values must be of type INT or FLOAT");
+					YYABORT;
+				}
+				}
+			| Call
+				{
+				$$ = $1;
+				if($$->type == CHAR || $$->type == STRING || $$->type == BOOL) {
+					semError("Math expression values must be of type INT or FLOAT");
+					YYABORT;
+				}
+				}
 			| NUMBER		{ $$ = newExpression(INT, NULL, NULL, NULL, $1, NULL, NULL); }
 			| FLOATVAL		{ $$ = newExpressionFloat(FLOAT, NULL, NULL, NULL, $1, NULL, NULL); }
 			| SUB Factor	//todo update this for NOT
@@ -410,6 +458,9 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				    semError("Function \"%s\" has not been declared", $1);
 				    YYABORT;
 				}
+
+				// set the expression type to the return type
+				$$->type = funcSymbol->decl->returnType;
 
 
 				//SEMANTIC CHECK #5:

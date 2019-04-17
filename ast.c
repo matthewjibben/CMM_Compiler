@@ -191,6 +191,9 @@ void printExpression(Expression* expr, int indent){
 //            printf("/========|");
 //        }
         printIndent(indent);
+        printf("type: ");
+        printTypeString(expr->type);
+        printf(" ");
         //create negation string
         //this is only used when an int or float is negated with unary "-"
         char* negationString;
@@ -274,10 +277,10 @@ void printDeclaration(Declaration* decl, int indent){
                 printTypeString(decl->returnType);
                 printf("\n\n");
                 printIndent(indent);
-//                printf("Enter code block: \n");
-//                printStatement(decl->codeBlock, indent+1);
-//                printIndent(indent);
-//                printf("Exit code block \n");
+                printf("Enter code block: \n");
+                printStatement(decl->codeBlock, indent+1);
+                printIndent(indent);
+                printf("Exit code block \n");
             }
             printf(" \n");
         }
@@ -446,6 +449,12 @@ char* getTypeString(int typeToken){
     }
     else if(typeToken==BOOL){
         return "boolean";
+    }
+    else if(typeToken==ASSIGN){
+        return "assign";
+    }
+    else {
+        return "\"other type\"";
     }
 }
 
