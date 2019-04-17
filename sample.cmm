@@ -2,7 +2,7 @@ int x = 0;
 x = 5;
 int abc = 12;
 int abc2 = 13;
-string myfunc(int a[], string b, char c){
+string myfunc(int a, string b, char c){
     int asdf;
     int mylist[10];
     //runFunction(123, asdf, "input");
@@ -45,6 +45,7 @@ if(z == 10){
     write z;
     string tests;
     char ctest;
+    int iarr[10];
     myfunc(1, "tests", "a");
 
     int asdfg = 1;
@@ -67,7 +68,7 @@ int main() {
     //int b;
     z = 234;
     char x2;
-    string c[5];
+    string c;
     c = myfunc(1, c, "3");
     int n = 123;
     int extra = (1 * 2) + 5 / n;

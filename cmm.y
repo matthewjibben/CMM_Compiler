@@ -424,17 +424,21 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 					Argument* tempArg = $3->head;
 					Param* tempParam = funcSymbol->decl->params->head;
 					//at this point we know that both have the same size
-					while(tempArg != NULL){
+					for(int i=0; i<$3->size; ++i){
 						//check that the types are the same
 						if(tempParam->type != tempArg->expr->type){
 							char* paramType = getTypeString(tempParam->type);
 							char* argType = getTypeString(tempArg->expr->type);
-//							semError("no");
 							semError("Parameter type mismatch: %s is not %s", argType, paramType);
 							YYABORT;
 						}
-						//do a symbol table lookup to get the variable if it is one
-
+						// check that isArray matches
+						if(tempParam->isArray != tempArg->expr->isArray){
+							char* expected = "did not expect array";
+							if(tempParam->isArray){expected = "expected array";}
+							semError("Parameter array mismatch: %s in parameter %i", expected, i);
+							YYABORT;
+						}
 						tempArg = tempArg->next;
 						tempParam = tempParam->next;
 					}
