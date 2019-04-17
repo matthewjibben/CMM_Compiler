@@ -343,6 +343,48 @@ IfStmt			: IF LPAREN Expr RPAREN Stmt
 Expr			: Primary		{ $$ = $1; }
 			| Expr RelOp Expr	//todo should type be $2? or bool?
 				{
+				//SEMANTIC CHECK #12
+				// Relation operations must use compatible types:
+				// Check 1: less than/greater than, etc. must use int or float types
+				if($2 == "<=" || $2 == ">=" || $2 == "<" || $2 == ">"){
+					if(($1->type != INT) && ($1->type != FLOAT)){
+						char* exprType = getTypeString($1->type);
+						semError("Unexpected %s in \"%s\" operation, expected either int or float", exprType, $2);
+						YYABORT;
+					}
+					if(($3->type != INT) && ($3->type != FLOAT)){
+						char* exprType = getTypeString($3->type);
+						semError("Unexpected %s in \"%s\" operation, expected either int or float", exprType, $2);
+						YYABORT;
+					}
+				}
+				// Check 2: equal operations must use the same type, but boolean and int equality is allowed
+				if($2 == "==" || $2 == "!="){
+					if(($1->type != $3->type)){
+						// check that we are not comparing ints and booleans, which is allowed
+						if( !((($1->type == BOOL) || ($1->type == INT)) && (($3->type == BOOL) || ($3->type == INT))) ){
+							char* exprType1 = getTypeString($1->type);
+							char* exprType2 = getTypeString($3->type);
+							semError("Operation \"%s\" types should be the same, got %s and %s", $2, exprType1, exprType2);
+							YYABORT;
+						}
+					}
+				}
+				// Check 3: && and || must use either integers or booleans
+				if($2 == "&&" || $2 == "||"){
+					if(($1->type != INT) && ($1->type != BOOL)){
+						char* exprType = getTypeString($1->type);
+						semError("Unexpected %s in \"%s\" operation, expected either bool or int", exprType, $2);
+						YYABORT;
+					}
+					if(($3->type != INT) && ($3->type != BOOL)){
+						char* exprType = getTypeString($3->type);
+						semError("Unexpected %s in \"%s\" operation, expected either bool or int", exprType, $2);
+						YYABORT;
+					}
+
+				}
+
 				$$ = newExpression(BOOL, $1, $3, NULL, NULL, $2, NULL);
 				}
 			| Call { $$ = $1; }

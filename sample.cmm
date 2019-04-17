@@ -70,7 +70,13 @@ if(z == 10){
 }
 
 {}
-
+char getChar(int type){
+    if(type > 0){
+        return "a";
+    } else {
+        return "b";
+    }
+}
 int main() {
     string x = myfunc(1, "asd", "a");
     int tester123 = 123;
@@ -86,12 +92,12 @@ int main() {
     2 > 3;
     int g = 7;
     bool x3 = !true;
-    if ( g == 7 || x3 ) {
+    if ( g == true ) {
         string d = "heyo";
         read d;
         writeln;
-        while(true || !false){
-            if(10+3>30){
+        while(true && !false){
+            if(10>12){
                 write 123;
             }
         }
