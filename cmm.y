@@ -1,16 +1,18 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #define YYDEBUG 1
 #include "ast.h"
 #include "symboltable.h"
 
 int yylex(void);
 void yyerror(const char*);
-void semError(const char*);
+void semError(const char*, ...);
 FILE* output;
 
 Env* env;
+bool funcDeclarationSwitch = false;
 
 %}
 
@@ -90,7 +92,7 @@ Env* env;
 progam			: StmtList
 				{
 				printf("\nprogram rule completed\n\n");
-				printStatement($1->head, 0);
+				//printStatement($1->head, 0);
 				//print global environment
 				printEnv(env);
 
@@ -102,7 +104,11 @@ progam			: StmtList
 /* =============================================== */
 
 Declaration		: VarDec	{$$=$1;}
-			| FunDec	{$$=$1;}
+			| FunDec Block
+				{
+				$1->codeBlock = $2;
+				$$=$1;
+				}
 			;
 
 VarDec			: Type ID SEMICOLON
@@ -124,9 +130,22 @@ Type			: INT		{ $$ = INT; }
 			| FLOAT		{ $$ = FLOAT; }
 			| BOOL		{ $$ = BOOL; }
 			;
-FunDec			: Type ID LPAREN Params RPAREN Block
+FunDec			: Type ID LPAREN Params RPAREN
 				{
-				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, $6, $4);
+				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, NULL, $4);
+				Env* temp = newEnvironment(env);
+				env = temp;
+				funcDeclarationSwitch = true;
+				// add the parameters to the new environment
+				if($4 != NULL){
+					Param* temp = $4->head;
+					while(temp!=NULL){
+						// create a declaration of the parameter and add to the current scope
+						Declaration* paramDec = newDeclaration(temp->name, temp->isArray, temp->type, NULL, NULL, NULL, NULL, NULL);
+						insertEntry(env, paramDec);
+						temp = temp->next;
+					}
+				}
 				}
 			;
 Params			: ParamList			{$$=$1;}
@@ -194,6 +213,14 @@ Stmt			: SEMICOLON		//no operation?
 			| IfStmt	{$$=$1;}
 			| Declaration
 				{
+				//SEMANTIC CHECK #1:
+				// check that the declared variable has not been previously declared in the same scope
+				if(lookupCurrentEnv(env, $1->name)!=NULL){
+					semError("Value %s cannot be declared with the same name twice", $1->name);
+					YYABORT;
+				}
+
+
 				// create the statement and add the declaration to the current environment
 				insertEntry(env, $1);
 				$$=newStatement(STMT_DECL, $1, NULL, NULL, NULL, NULL);
@@ -234,12 +261,32 @@ Expr			: Primary		{ $$ = $1; }
 
 
 
-Var			: ID			{$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);}  //todo symboltable lookup
+Var			: ID
+				{
+				$$ = newExpression(ID, NULL, NULL, $1, NULL, NULL, NULL);
+
+				//SEMANTIC CHECK #2:
+				//No ID can be used before it is declared
+				//do a full symbol table lookup and check that the ID is declared
+				if(lookup(env, $1)==NULL){
+				    semError("Variable %s has not been declared", $1);
+				    YYABORT;
+				}
+
+				}  //todo symboltable lookup
 			| ID LSQUARE Expr RSQUARE
 				{
 				// todo check that expression returns an integer
 				// the expression is placed on the left side, nothing on the right
 				$$ = newExpression(ID, $3, NULL, $1, $3->ival, NULL, NULL);
+
+				//SEMANTIC CHECK #2:
+				//No ID can be used before it is declared
+				//do a full symbol table lookup and check that the ID is declared
+				if(lookup(env, $1)==NULL){
+				    semError("Variable %s has not been declared", $1);
+				    YYABORT;
+				}
 				}
 			;
 
@@ -339,6 +386,14 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				{
 				$$ = newExpression(NULL, NULL, NULL, $1, NULL, NULL, $3);
 				$$->isFunctionCall = true;
+
+				//SEMANTIC CHECK #2:
+				//No ID can be used before it is declared
+				//do a full symbol table lookup and check that the ID is declared
+				if(lookup(env, $1)==NULL){
+				    semError("Function \"%s\" has not been declared", $1);
+				    YYABORT;
+				}
 				}
 			;
 Args			: ArgList		{$$=$1;}

@@ -62,7 +62,7 @@ int insertEntry(struct Env* env, Declaration* decl){
 }
 
 struct Symbol* lookup(struct Env* env, char* id){
-    //printf("search start...\n");
+//    printf("lookup start...\n");
     // lookup through each environment until we find the id
     for(struct Env* tempenv = env; tempenv != NULL; tempenv = tempenv->prev){
         //printf("new env\n");
@@ -77,6 +77,19 @@ struct Symbol* lookup(struct Env* env, char* id){
         }
     }
 
+//    printf("The value has not been found\n");
+    // if the value is never reached
+    return NULL;
+}
+
+struct Symbol* lookupCurrentEnv(struct Env* env, char* id){
+    //same as looup, but only search through the current environment
+    // search through the table by traversing the linked list
+    for(struct Symbol* temp = env->head; temp!=NULL; temp = temp->next){
+        if(strcmp(temp->decl->name, id)==0){
+            return temp;
+        }
+    }
     printf("The value has not been found\n");
     // if the value is never reached
     return NULL;

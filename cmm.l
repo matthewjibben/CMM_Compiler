@@ -1,6 +1,7 @@
 %{
 #include "symboltable.h"
 #include "cmm.tab.h"
+#include <stdarg.h>
 
 
 int chars = 0;
@@ -9,6 +10,7 @@ int chars = 0;
 //struct Env* env;
 //env = newEnvironment(NULL);
 
+extern bool funcDeclarationSwitch;
 extern Env* env;
 
 /* adjust function, updates the chars value based on the lexeme */
@@ -72,10 +74,16 @@ string                  { adjust(); return STRING; }
 
 
 "{"                     { adjust();
-                          // create new environment and enter it
-                          Env* temp = newEnvironment(env);
-                          env = temp;
-                          printf("entering new scope...\n");
+                          // only enter the new environment if the funcDeclarationSwitch is false
+                          // this ensures that the function parameters are stored in the right environment
+                          if(funcDeclarationSwitch){
+                                funcDeclarationSwitch = false;
+                          } else {
+                              // create new environment and enter it
+                              Env* temp = newEnvironment(env);
+                              env = temp;
+                              printf("entering new scope...\n");
+                          }
 
                           return LBRACK; }
 "}"                     { adjust();
@@ -120,7 +128,8 @@ string                  { adjust(); return STRING; }
 
 {id}		                    { adjust();
                                     yylval.sval = strdup(yytext);
-                                    return ID; }
+                                    return ID;
+                                    }
 
 {dig}*\.{dig}*                  { adjust();
                                     yylval.fval = atof(yytext);
@@ -147,9 +156,17 @@ void yyerror(const char *s){
     printf("current word: %s", yytext);
 }
 
-void semError(const char* message){
-    printf("SEMANTIC ERROR on line %i, character %i: %s\n", yylineno, chars, message);
-    printf("current word: %s", yytext);
+void semError(const char* message, ...){
+    //get the list of arguments to include in the message
+    va_list args;
+    va_start(args, message);
+
+    printf("SEMANTIC ERROR on line %i, character %i: ", yylineno, chars);
+    vprintf(message, args);
+    printf("\n");
+    printf("current word: %s\n\n", yytext);
+
+    va_end(args);
 }
 
 //int main(int argc, char **argv)

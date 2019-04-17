@@ -43,6 +43,9 @@ typedef struct Env{
 Env* newEnvironment(struct Env* previous);
 int insertEntry(struct Env* env, Declaration* decl);
 struct Symbol* lookup(struct Env* env, char* id);
+struct Symbol* lookupCurrentEnv(struct Env* env, char* id);
+
+
 void deleteItem(struct Env* env, char* id);
 void printEnv(struct Env* env);
 void updateVal(struct Env* env, char* id, char* newval);

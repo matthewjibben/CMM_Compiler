@@ -412,6 +412,9 @@ void printTypeString(int typeToken){
     else if(typeToken==FUNCTION){
         printf("function");
     }
+    else if(typeToken==BOOL){
+        printf("boolean");
+    }
 //    else if(typeToken==FLOAT){
 //        printf("float");
 //    }

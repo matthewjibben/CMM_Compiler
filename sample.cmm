@@ -1,14 +1,17 @@
 int x = 0;
 x = 5;
+int abc = 12;
+int abc2 = 13;
 string myfunc(int a[], string b, char c){
-    runFunction(123, asdf, "input");
+    int asdf;
+    //runFunction(123, asdf, "input");
     {
     read x;
     write x;
     writeln;
     }
     ;
-    if(myVar > 1){
+    if(asdf > 1){
         write "hi";
     }
     else {
@@ -29,8 +32,8 @@ string myfunc(int a[], string b, char c){
     int myint = -123;
     x[1] = "asdf";
     x = (1-5);
-    int x = 129 * 2001 + 25 - 7;
-    runFunction(123, asdf, "input");
+    int x2 = 129 * 2001 + 25 - 7;
+    //runFunction(123, asdf, "input");
     // comments?
     return "thestring";
 }
@@ -38,7 +41,9 @@ int z = 12;
 
 if(z == 10){
     write z;
+    myfunc(1, 2, 3);
     string buildString(int i, string j){
+        int h = 0;
         while(h<i){
             h = h+1;
             write j;
@@ -54,21 +59,25 @@ int main() {
     //int x = 123;
     //int b;
     z = 234;
-    char x;
+    char x2;
+    string c;
     c = myfunc();
-    extra = (1 * 2) + 5 / n;
+    int n = 123;
+    int extra = (1 * 2) + 5 / n;
     2 > 3;
+    int g = 7;
     if ( g == 7 ) {
+        string d = "heyo";
         read d;
         writeln;
-        while(true || false){
+        while(true || !false){
             write 123;
         }
     }
-    bool x = !true;
+    bool x3 = !true;
     x;
     string adf = "mysval123";
-    float x = 1.0;
+    float x4 = 1.0;
     int a123 = -1 * -1.1 * -3.12 + (2+-10) * ---.54;
     myfunc(123,22,abc);
 }
