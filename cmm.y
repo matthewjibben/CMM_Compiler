@@ -156,6 +156,12 @@ Type			: INT		{ $$ = INT; }
 			;
 FunDec			: Type ID LPAREN Params RPAREN
 				{
+				//SEMANTIC CHECK
+				// Function declarations are only allowed inside of the global environment
+				if(env->type != 0){
+					semError("Error in %s declaration: functions must be in the global scope", $2);
+					YYABORT;
+				}
 				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, NULL, $4);
 				Env* temp = newEnvironment(env);
 				env = temp;
@@ -228,6 +234,22 @@ Stmt			: SEMICOLON		//no operation?
 				}
 			| BREAK SEMICOLON
 				{
+				//SEMANTIC CHECK #17
+				// all break statements must be contained within the body of a loop
+				// traverse backwards through each environment and look for a while loop
+				Env* tempenv = env;
+				while(tempenv!=NULL){
+					if(tempenv->type == 0 || tempenv->type == FUNCTION){
+						//global environment reached, issue error
+						semError("Break statement not inside a loop");
+						YYABORT;
+					}
+					if(tempenv->type == WHILE){
+						//while loop found, break
+						break;
+					}
+					tempenv = tempenv->prev;
+				}
 				$$ = newStatement(STMT_BREAK, NULL, NULL, NULL, NULL, NULL);
 				}
 			| Block
@@ -341,7 +363,7 @@ IfStmt			: IF LPAREN Expr RPAREN Stmt
 /* =============================================== */
 
 Expr			: Primary		{ $$ = $1; }
-			| Expr RelOp Expr	//todo should type be $2? or bool?
+			| Expr RelOp Expr	//todo should type be $2? or bool? Answer: bool
 				{
 				//SEMANTIC CHECK #12
 				// Relation operations must use compatible types:
@@ -547,7 +569,7 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 				{
 				$$ = $1;
 				if($$->type == CHAR || $$->type == STRING || $$->type == BOOL) {
-					semError("Math expression values must be of type INT or FLOAT");
+					semError("Math expression values must be of type INT or FLOAT or BOOL");
 					YYABORT;
 				}
 				}
