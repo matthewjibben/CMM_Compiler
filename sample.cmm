@@ -35,7 +35,7 @@ string myfunc(int a, string b, char c){
     int myint = -123;
     string mystr;
     x[1] = 12;
-    x = (1-5);
+    x[2] = (1-5);
     int x2 = 129 * 2001 + 25 - 7;
     //runFunction(123, asdf, "input");
     // comments?
@@ -44,6 +44,8 @@ string myfunc(int a, string b, char c){
 
 string buildString(int i, string j){
     int h = 0;
+    int myfunc=10;
+    myfunc(1, "asdf", "a");
     while(h<i){
         h = h+1;
         write j;

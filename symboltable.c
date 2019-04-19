@@ -82,6 +82,24 @@ struct Symbol* lookup(struct Env* env, char* id){
     return NULL;
 }
 
+struct Symbol* lookupFunction(struct Env* env, char* id){
+    struct Env* tempenv = env;
+    // traverse backwards until we reach the global environment
+    // all functions are stored in the global environment
+    while(tempenv->type!=0){
+        tempenv = tempenv->prev;
+    }
+    //now search through the environment and find a symbol with the same name and is a function
+    // search through the table by traversing the linked list
+    for(struct Symbol* temp = tempenv->head; temp!=NULL; temp = temp->next){
+        //printf("|%s|\n", temp->decl->name);
+        if(strcmp(temp->decl->name, id)==0 && temp->decl->type==FUNCTION){
+            //printf("The value has been found\n");
+            return temp;
+        }
+    }
+}
+
 struct Symbol* lookupCurrentEnv(struct Env* env, char* id){
     //same as looup, but only search through the current environment
     // search through the table by traversing the linked list

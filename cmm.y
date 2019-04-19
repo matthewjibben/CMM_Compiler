@@ -447,6 +447,13 @@ Var			: ID
 				    YYABORT;
 				}
 
+				//SEMANTIC CHECK
+				// You are only allowed to access array items, not the entire array at once
+				// You can only call an array variable with an index
+				if(idSymbol->decl->isArray){
+					semError("Variable %s is an array, only the items can be accessed using an index", $1);
+					YYABORT;
+				}
 
 				$$ = newExpression(idSymbol->decl->type, NULL, NULL, $1, NULL, NULL, NULL);
 				$$->isArray = idSymbol->decl->isArray;
@@ -616,7 +623,7 @@ Call			: ID LPAREN Args RPAREN		//todo symboltable lookup function type
 				//SEMANTIC CHECK #2:
 				//No ID can be used before it is declared
 				//do a full symbol table lookup and check that the ID is declared
-				Symbol* funcSymbol = lookup(env, $1);
+				Symbol* funcSymbol = lookupFunction(env, $1);
 				if(funcSymbol==NULL){
 				    semError("Function \"%s\" has not been declared", $1);
 				    YYABORT;
