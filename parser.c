@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 {
     printf("=========================parser.c=========================\n");
     //open the input sample cmm file
-    if((yyin = fopen("./sample.cmm","r"))==NULL){
+    if((yyin = fopen("./sampleCgen.cmm","r"))==NULL){
         printf("Failed to read file");
         exit(1);
     }

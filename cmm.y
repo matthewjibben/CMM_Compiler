@@ -410,7 +410,7 @@ Expr			: Primary		{ $$ = $1; }
 				$$ = newExpression(BOOL, $1, $3, NULL, NULL, $2, NULL);
 				}
 			| Call { $$ = $1; }
-			| SimpleExpr {$$ = $1;}
+			| SimpleExpr {$$ = $1; getBranchWeight($1); cgen($1); }
 			| Var ASSIGN Expr
 				{
 				//SEMANTIC CHECK #6
@@ -456,7 +456,7 @@ Var			: ID
 				}
 
 				$$ = newExpression(idSymbol->decl->type, NULL, NULL, $1, NULL, NULL, NULL);
-				$$->isArray = idSymbol->decl->isArray;
+				$$->isArray = idSymbol->decl->isArray;  //not really necessary because arrays must be called with an index
 
 
 				}  //todo symboltable lookup

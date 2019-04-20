@@ -117,6 +117,9 @@ typedef struct Expression{
     bool isUnaryNot;
 
     ArgList* args;
+
+    int weight;     // this is used in IR generation for tree translation
+
 } Expression;
 
 
