@@ -10,6 +10,7 @@ int yylex(void);
 void yyerror(const char*);
 void semError(const char*, ...);
 FILE* output;
+FILE* outputTAC;
 
 Env* env;
 bool envStartSwitch = false;
@@ -216,6 +217,8 @@ Stmt			: SEMICOLON		//no operation?
 			| Expr SEMICOLON	//todo symboltable type lookup
 				{
 				$$ = newStatement(STMT_EXPR, NULL, $1, NULL, NULL, NULL);
+				getBranchWeight($1);
+				cgen($1, 0);
 				}
 			| READ Var SEMICOLON
 				{
@@ -410,7 +413,7 @@ Expr			: Primary		{ $$ = $1; }
 				$$ = newExpression(BOOL, $1, $3, NULL, NULL, $2, NULL);
 				}
 			| Call { $$ = $1; }
-			| SimpleExpr {$$ = $1; getBranchWeight($1); cgen($1); }
+			| SimpleExpr {$$ = $1;} // getBranchWeight($1); cgen($1, 0); }
 			| Var ASSIGN Expr
 				{
 				//SEMANTIC CHECK #6

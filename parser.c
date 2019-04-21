@@ -11,6 +11,7 @@
 extern int yyparse();
 extern FILE* yyin;
 extern FILE* output;
+extern FILE* outputTAC;
 extern Env* env;
 int main(int argc, char **argv)
 {
@@ -25,8 +26,9 @@ int main(int argc, char **argv)
     }
 
 
-//    output = fopen("./output.asm", "w");
-//    fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
+    outputTAC = fopen("./output.tac", "w");
+    //fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
+    fprintf(outputTAC, "===TAC FILE===\n");
 
     // create initial global environment
     env = newEnvironment(NULL);
