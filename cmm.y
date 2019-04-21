@@ -5,6 +5,7 @@
 #define YYDEBUG 1
 #include "ast.h"
 #include "symboltable.h"
+#include "IR.h"
 
 int yylex(void);
 void yyerror(const char*);
@@ -14,6 +15,8 @@ FILE* outputTAC;
 
 Env* env;
 bool envStartSwitch = false;
+
+Program* program;
 
 %}
 
@@ -97,6 +100,8 @@ progam			: StmtList
 				//print global environment
 				printEnv(env);
 
+				cgenStatement($1->head);
+				emit(program, outputTAC);
 				freeStatement($1->head);
 				freeStmtList($1);
 				}
@@ -217,8 +222,8 @@ Stmt			: SEMICOLON		//no operation?
 			| Expr SEMICOLON	//todo symboltable type lookup
 				{
 				$$ = newStatement(STMT_EXPR, NULL, $1, NULL, NULL, NULL);
-				getBranchWeight($1);
-				cgen($1, 0);
+//				getBranchWeight($1);
+//				cgen($1, 0);
 				}
 			| READ Var SEMICOLON
 				{

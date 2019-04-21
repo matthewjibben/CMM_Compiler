@@ -7,12 +7,14 @@
 #include "cmm.tab.h"
 #include "ast.h"
 #include "symboltable.h"
+#include "IR.h"
 
 extern int yyparse();
 extern FILE* yyin;
 extern FILE* output;
 extern FILE* outputTAC;
 extern Env* env;
+extern Program* program;
 int main(int argc, char **argv)
 {
     printf("=========================parser.c=========================\n");
@@ -24,7 +26,7 @@ int main(int argc, char **argv)
     else {
         printf("file correctly opened\n");
     }
-
+    program = malloc(sizeof(program));
 
     outputTAC = fopen("./output.tac", "w");
     //fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
 //    fprintf(output, "syscall\n");
 
     //freeDeclaration(decl1);
+    free(program);  //todo free all instructions too
     freeEnv(env);
 
     fclose(yyin);
