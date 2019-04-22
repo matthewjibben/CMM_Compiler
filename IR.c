@@ -10,6 +10,9 @@ extern Program* program;
 int ifelseCount = 0;
 int whilecount = 0;
 
+//global string counter. each string must have a unique name in MIPS
+int stringCount = 0;    //todo only necessary in MIPS?
+
 /* ========================================== */
 
 Instruction* newInstruction(instrType type, char* arg1, char* arg2, char* arg3, char* op){
@@ -50,6 +53,9 @@ void emit(Program* prog, FILE* output){
         }
         else if(head->type == INST_JUMP){
             fprintf(output, "j %s\n", head->arg1);
+        }
+        else if(head->type == INST_ALLOCATE_ARRAY_INT || head->type == INST_ALLOCATE_ARRAY_VAR){
+            fprintf(output, "%s = allocate(%s)", head->arg1, head->arg2);
         }
         head = head->next;
     }
@@ -108,6 +114,12 @@ char* cgen(Expression* expr, int c){
             snprintf(buff, 2, "%i", expr->ival);
             char* str = buff;
             return strdup(str);
+        }
+        else if(expr->type == STRING){
+//            char buff[2];
+//            snprintf(buff, 2, "%i", expr->ival);
+//            char* str = buff;
+            return expr->sval;
         }
     }
     if(expr->left!=NULL && expr->right!=NULL){
@@ -268,6 +280,45 @@ char* cgenStatement(Statement* stmt){
         }
         else if(stmt->type == STMT_BLOCK){
             cgenStatement(stmt->codeBody);
+        }
+        else if(stmt->type == STMT_DECL){
+
+//            if(stmt->decl->type==FUNCTION){
+//
+//            }
+            if(!stmt->decl->isArray && stmt->decl->value!=NULL){
+                //the declaration is of the form "type x = expr"
+                //this becomes just a normal assign in the IR
+                char* value;
+                value = cgen(stmt->decl->value, 0);
+
+                //build the instruction and add to the program
+                appendInstruction(program, newInstruction(INST_ASSIGN, stmt->decl->name, value, NULL, NULL));
+            }
+            else if(stmt->decl->isArray){
+                //need to allocate the necessary size in the heap
+                //if it is a character array, that is the size in bytes (each character is one byte)
+                //any other type of array is the size * 4, since we use 32 bit integers or addresses
+                int size = stmt->decl->size;
+                if(stmt->type != CHAR){
+                    size *= 4;
+                }
+                //syscall 9 can be used to allocate in the heap, however this will only be done in MIPS
+                //in the IR, it is more compact to use the form "var = allocate(bytesize)"
+                if(stmt->decl->value==NULL) {
+                    //the array is allocated with a integer
+                    char buff[100];
+                    snprintf(buff, 100, "%i", stmt->decl->size);
+                    char* str = strdup(buff);
+                    appendInstruction(program,
+                                      newInstruction(INST_ALLOCATE_ARRAY_INT, stmt->decl->name, str, NULL, NULL));
+                } else {
+                    //the array is allocated using a variable
+                    appendInstruction(program,
+                                      newInstruction(INST_ALLOCATE_ARRAY_VAR, stmt->decl->name, stmt->decl->value->name, NULL, NULL));
+
+                }
+            }
         }
         stmt = stmt->next;
     }

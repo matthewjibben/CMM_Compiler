@@ -153,6 +153,16 @@ VarDec			: Type ID SEMICOLON
 					}
                         		$$ = newDeclaration($2, true, $1, NULL, $4, NULL, NULL, NULL);
                         	}
+                        | Type ID LSQUARE Var RSQUARE SEMICOLON
+				{
+					//SEMANTIC CHECK
+					//If a variable is given, it must be an integer
+					if($4->type != INT || $4->isArray){
+						semError("Array index must be an integer");
+						YYABORT;
+					}
+					$$ = newDeclaration($2, true, $1, NULL, NULL, $4, NULL, NULL);
+				}
                         ;
 Type			: INT		{ $$ = INT; }
 			| CHAR		{ $$ = CHAR; }
