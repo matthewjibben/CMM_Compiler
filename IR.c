@@ -5,11 +5,10 @@
 #include "IR.h"
 #include "ast.h"
 
-extern FILE* outputTAC;
 extern Program* program;
 //global label counters for TAC
 int ifelseCount = 0;
-
+int whilecount = 0;
 
 /* ========================================== */
 
@@ -38,7 +37,7 @@ void emit(Program* prog, FILE* output){
     Instruction* head = prog->head;
     while(head!=NULL){
         if(head->type==INST_LABEL){
-            fprintf(output, "\n%s\n", head->arg1);
+            fprintf(output, "\n%s:\n", head->arg1);
         }
         else if(head->type == INST_ASSIGN){
             fprintf(output, "%s = %s\n", head->arg1, head->arg2);
@@ -155,15 +154,15 @@ char* cgenStatement(Statement* stmt){
             //generate the necessary labels
             // generate the IF label
             char buff[1000];
-            snprintf(buff, 1000, "IF%i:", label);
+            snprintf(buff, 1000, "IF%i", label);
             char *ifLabel = strdup(buff);
 
             // generate the ELSE label
-            snprintf(buff, 1000, "ELSE%i:", label);
+            snprintf(buff, 1000, "ELSE%i", label);
             char *elseLabel = strdup(buff);
 
             // generate the AFTER label
-            snprintf(buff, 1000, "AFTER_IF_ELSE%i:", label);
+            snprintf(buff, 1000, "AFTER_IF_ELSE%i", label);
             char *afterLabel = strdup(buff);
 
             //check the condition
@@ -191,17 +190,17 @@ char* cgenStatement(Statement* stmt){
             appendInstruction(program, newInstruction(INST_LABEL, afterLabel, NULL, NULL, NULL));
         }
         else if(stmt->type == STMT_IF){
-            //for if else statements, generate a new label for each block using the counter
+            //for if statements, generate a new label for each block using the counter
             int label = ifelseCount;
             ifelseCount++;
             //generate the necessary labels
             // generate the IF label
             char buff[1000];
-            snprintf(buff, 1000, "IF%i:", label);
+            snprintf(buff, 1000, "IF%i", label);
             char *ifLabel = strdup(buff);
 
             // generate the AFTER label
-            snprintf(buff, 1000, "AFTER_IF%i:", label);
+            snprintf(buff, 1000, "AFTER_IF%i", label);
             char *afterLabel = strdup(buff);
 
             //check the condition
@@ -217,6 +216,50 @@ char* cgenStatement(Statement* stmt){
 
             // END label
             appendInstruction(program, newInstruction(INST_LABEL, afterLabel, NULL, NULL, NULL));
+        }
+        else if(stmt->type == STMT_WHILE){
+            //generate a new label count for the while block
+            int label = whilecount;
+            whilecount++;
+            //generate the necessary labels
+            // generate the WHILE label
+            char buff[1000];
+            snprintf(buff, 1000, "WHILE%i", label);
+            char *whileLabel = strdup(buff);
+            // generate the WHILE label
+            snprintf(buff, 1000, "AFTER_WHILE%i", label);
+            char *afterWhileLabel = strdup(buff);
+
+            // WHILE label
+            appendInstruction(program, newInstruction(INST_LABEL, whileLabel, NULL, NULL, NULL));
+
+            //check the condition
+            getBranchWeight(stmt->expr);
+            char* condition = cgen(stmt->expr, 0);          // todo calculate expression outside loop?
+            //if the condition is false (0), jump to the after label. otherwise continue through the code block
+            appendInstruction(program, newInstruction(INST_COND_JUMP, condition, afterWhileLabel, NULL, "beqz"));
+
+            //run cgen on the WHILE code body
+            cgenStatement(stmt->codeBody);
+
+            //unconditional jump back to loop back to the start of the while loop
+            appendInstruction(program, newInstruction(INST_JUMP, whileLabel, NULL, NULL, NULL));
+
+
+            // AFTER WHILE label
+            appendInstruction(program, newInstruction(INST_LABEL, afterWhileLabel, NULL, NULL, NULL));
+        }
+        else if(stmt->type == STMT_BREAK){
+            //for a break statement, we need to find the current after_loop label and jump to it
+            //because there are only while loops currently, jump to AFTER_WHILEi
+            //get the necessary label
+            int label = whilecount-1;
+            char buff[1000];
+            snprintf(buff, 1000, "AFTER_WHILE%i", label);
+            char *afterWhileLabel = strdup(buff);
+
+            //jump to the end of the while loop, breaking the loop
+            appendInstruction(program, newInstruction(INST_JUMP, afterWhileLabel, NULL, NULL, NULL));
         }
         else if(stmt->type == STMT_EXPR){
             //todo check if expression is necessary (only function calls and assigns are necessary)
