@@ -7,6 +7,25 @@
 
 #include "ast.h"
 
+typedef enum argType{
+    ARG_REGISTER,
+    ARG_VARIABLE,
+    ARG_VALUE,
+    ARG_LABEL,
+    ARG_STRING
+} argType;
+
+typedef struct Arg {
+    argType type;
+
+    // for a register, the name is a char EX: "t" or "s". the value is the number. This builds: "t0" for example
+    // for a variable, only the name is used
+    // for a value, only the int value is used
+    // for a label, both name and value are used
+    int value;
+    char* name;
+} Arg;
+
 typedef enum instrType{
     INST_LABEL,
     INST_ASSIGN,
@@ -24,12 +43,17 @@ typedef enum instrType{
 
 typedef struct Instruction {
     instrType type;
-    char* arg1;
-    char* arg2;
-    char* arg3;
+    Arg* arg1;
+    Arg* arg2;
+    Arg* arg3;
     char* op;
     struct Instruction* next;
 } Instruction;
+
+
+
+
+
 
 typedef struct Program {
     Instruction* head;
@@ -39,11 +63,11 @@ typedef struct Program {
 
 
 
-Instruction* newInstruction(instrType type, char* arg1, char* arg2, char* arg3, char* op);
+Instruction* newInstruction(instrType type, Arg* arg1, Arg* arg2, Arg* arg3, char* op);
 void appendInstruction(Program* prog, Instruction* instr);
 
 int getBranchWeight(Expression* expr);
-char* cgen(Expression* expr, int c);
+Arg* cgen(Expression* expr, int c);
 char* cgenStatement(Statement* stmt);
 
 
