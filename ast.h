@@ -115,6 +115,7 @@ typedef struct Expression{
 
     bool isUnaryNegate;
     bool isUnaryNot;
+    bool isArrayCell;
 
     ArgList* args;
 

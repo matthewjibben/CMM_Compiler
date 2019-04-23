@@ -509,6 +509,7 @@ Var			: ID
 
 				// the expression is placed on the left side, nothing on the right
 				$$ = newExpression(idSymbol->decl->type, $3, NULL, $1, $3->ival, NULL, NULL);			//todo should $3->ival be here?
+				$$->isArrayCell = true;
 				//$$->isArray = idSymbol->decl->isArray;
 
 

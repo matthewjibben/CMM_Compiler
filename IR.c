@@ -26,7 +26,7 @@ Arg* newArg(argType type, int value, char* name){
 
 char* getArgString(Arg* arg){
     char* str;
-    if(arg->type==ARG_LABEL) {
+    if(arg->type==ARG_LABEL){
         char buff[1000];
         snprintf(buff, 1000, "%s%i", arg->name, arg->value);
         str = strdup(buff);
@@ -89,10 +89,67 @@ void emit(Program* prog, FILE* output){
         else if(head->type == INST_ALLOCATE_ARRAY_INT || head->type == INST_ALLOCATE_ARRAY_VAR){
             fprintf(output, "%s = allocate(%s)\n", getArgString(head->arg1), getArgString(head->arg2));
         }
+        else if(head->type == INST_ASSIGN_LW){
+            fprintf(output, "lw %s %s(%s)\n", getArgString(head->arg1), getArgString(head->arg2), getArgString(head->arg3));
+        }
+        else if(head->type == INST_ASSIGN_SW){
+            fprintf(output, "sw %s %s(%s)\n", getArgString(head->arg1), getArgString(head->arg2), getArgString(head->arg3));
+        }
         head = head->next;
     }
 }
 
+Arg* getArrayCellValue(Expression* expr, int c){
+    // to get the value in an array cell, we need to use an index and move the address manually
+    Arg* index;
+    if(expr->type!=CHAR){
+        //if needed, multiply index by 4
+        Expression* times4 = newExpression(INT, NULL, NULL, NULL, 4, NULL, NULL);
+        Expression* multiplication = newExpression(INT, expr->left, times4, NULL, NULL, "*", NULL);
+        index = cgen(multiplication, c);
+        freeExpression(times4);
+        freeExpression(multiplication);
+    }
+    else {
+        index = cgen(expr->left, c);
+    }
+    // to get an item at index N, we say $t0 = arraypointer + index
+    // to use the value, do lw $t1 0($t0)
+    // to set a value, do sw $t2 0($t0)
+    Arg* cell = newArg(ARG_REGISTER, c, "t");
+    Arg* name = newArg(ARG_VARIABLE, 0, expr->name);
+
+    Arg* zero = newArg(ARG_VALUE, 0, NULL);
+    Arg* value = newArg(ARG_REGISTER, c+1, "t");
+    appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
+    appendInstruction(program, newInstruction(INST_ASSIGN_LW, value, zero, index, NULL));
+    //use the lw instruction to get the value inside the cell
+    return value;
+}
+
+Arg* getArrayCell(Expression* expr, int c){
+    // to get the value in an array cell, we need to use an index and move the address manually
+    Arg* index;
+    if(expr->type!=CHAR){
+        //if needed, multiply index by 4
+        Expression* times4 = newExpression(INT, NULL, NULL, NULL, 4, NULL, NULL);
+        Expression* multiplication = newExpression(INT, expr->left, times4, NULL, NULL, "*", NULL);
+        index = cgen(multiplication, c);
+        freeExpression(times4);
+        freeExpression(multiplication);
+    }
+    else {
+        index = cgen(expr->left, c);
+    }
+    // to get an item at index N, we say $t0 = arraypointer + index
+    // to use the value, do lw $t1 0($t0)
+    // to set a value, do sw $t2 0($t0)
+    Arg* cell = newArg(ARG_REGISTER, c, "t");
+    Arg* name = newArg(ARG_VARIABLE, 0, expr->name);
+
+    appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
+    return cell;
+}
 
 /* ========================================== */
 int getBranchWeight(Expression* expr){
@@ -127,32 +184,24 @@ Arg* cgen(Expression* expr, int c){
         else if(expr->type==FLOAT) {
             // if the type is float, generate the string and return it
             // if the type is a float, MIPS will need to load into a register and return it
-
-//            char buff[100];
-//            snprintf(buff, 100, "%i", (int)expr->fval);
-//            char* str = strdup(buff);
             return newArg(ARG_VALUE, (int)expr->fval, NULL);
         }
         else if(expr->type == INT){
             // if the type is int, generate the string and return it
-//            fprintf(outputTAC, "$t%i = %i\n", c, expr->ival); // This will be necessary for
-//            char buff[100];
-//            snprintf(buff, 100, "%i", expr->ival);
-//            char* str = strdup(buff);
             return newArg(ARG_VALUE, expr->ival, NULL);
         }
         else if(expr->type == BOOL){
-//            char buff[2];
-//            snprintf(buff, 2, "%i", expr->ival);
-//            char* str = buff;
             return newArg(ARG_VALUE, expr->ival, NULL);
         }
         else if(expr->type == STRING){
-//            char buff[2];
-//            snprintf(buff, 2, "%i", expr->ival);
-//            char* str = buff;
             return newArg(ARG_STRING, 0, expr->sval);
         }
+    }
+    if(expr->isArrayCell){
+        // if the expresion is an array cell (array name with a given index), it must be used like 0($t0)
+        // if the value must be used, set the value on another register using lw $t1 0($t0)
+        // if the value must be set, set it using sw $t1 0($t0)
+        return getArrayCellValue(expr, c+1);
     }
     if(expr->left!=NULL && expr->right!=NULL){
         Arg* left;
@@ -160,9 +209,30 @@ Arg* cgen(Expression* expr, int c){
         if(expr->type==ASSIGN){
             //if the expression is an assign expression, we can simply assign the left side to the right
             right = cgen(expr->right, c);
+            if(expr->left->isArrayCell){
+                // if we are assigning a value to the inside of an array, we need to use sw $t1 0($t0)
+                left = getArrayCell(expr->left, c+1);
+                Arg* zero = newArg(ARG_VALUE, 0, NULL);
 
-            //build the instruction and add to the program
-            appendInstruction(program, newInstruction(INST_ASSIGN, left, right, NULL, NULL));
+                if(right->type==ARG_VALUE){
+                    // if the assign value is a pure value, it must be assigned to a register
+                    Arg* valueReg = newArg(ARG_REGISTER, c, "t");
+                    appendInstruction(program, newInstruction(INST_ASSIGN, valueReg, right, NULL, NULL));
+                    //build the instruction and add to the program
+                    appendInstruction(program, newInstruction(INST_ASSIGN_SW, valueReg, zero, left, NULL));
+
+                }
+                else {
+                    //build the instruction and add to the program
+                    appendInstruction(program, newInstruction(INST_ASSIGN_SW, right, zero, left, NULL));
+                }
+            }
+            else {
+                left = cgen(expr->left, c);
+                //build the instruction and add to the program
+                appendInstruction(program, newInstruction(INST_ASSIGN, left, right, NULL, NULL));
+            }
+
             //for convention and possible future improvements, the variable name will be returned
             return left;
         }
@@ -180,9 +250,6 @@ Arg* cgen(Expression* expr, int c){
         }
         //if this expression is a float, use $fX = expression? future implementation
         //return the register that was used
-//        char buff[5];
-//        snprintf(buff, 5, "$t%i", c);
-//        char* str = strdup(buff);
         Arg* arg = newArg(ARG_REGISTER, c, "t");
 
         appendInstruction(program, newInstruction(INST_ASSIGN_OP, arg, left, right, expr->sval));
@@ -198,18 +265,12 @@ char* cgenStatement(Statement* stmt){
             ifelseCount++;
             //generate the necessary labels
             // generate the IF label
-//            char buff[1000];
-//            snprintf(buff, 1000, "IF%i", label);
-//            char *ifLabel = strdup(buff);
             Arg* ifLabel = newArg(ARG_LABEL, label, "IF");
 
             // generate the ELSE label
-//            snprintf(buff, 1000, "ELSE%i", label);
             Arg* elseLabel = newArg(ARG_LABEL, label, "ELSE");
 
             // generate the AFTER label
-//            snprintf(buff, 1000, "AFTER_IF_ELSE%i", label);
-//            char *afterLabel = strdup(buff);
             Arg* afterLabel = newArg(ARG_LABEL, label, "AFTER_IF_ELSE");
 
             //check the condition
@@ -242,15 +303,10 @@ char* cgenStatement(Statement* stmt){
             ifelseCount++;
             //generate the necessary labels
             // generate the IF label
-//            char buff[1000];
-//            snprintf(buff, 1000, "IF%i", label);
-//            char *ifLabel = strdup(buff);
             Arg* ifLabel = newArg(ARG_LABEL, label, "IF");
 
 
             // generate the AFTER label
-//            snprintf(buff, 1000, "AFTER_IF%i", label);
-//            char *afterLabel = strdup(buff);
             Arg* afterLabel = newArg(ARG_LABEL, label, "AFTER_IF");
 
 
@@ -274,14 +330,9 @@ char* cgenStatement(Statement* stmt){
             whilecount++;
             //generate the necessary labels
             // generate the WHILE label
-//            char buff[1000];
-//            snprintf(buff, 1000, "WHILE%i", label);
-//            char *whileLabel = strdup(buff);
             Arg* whileLabel = newArg(ARG_LABEL, label, "WHILE");
 
             // generate the WHILE label
-//            snprintf(buff, 1000, "AFTER_WHILE%i", label);
-//            char *afterWhileLabel = strdup(buff);
             Arg* afterWhileLabel = newArg(ARG_LABEL, label, "AFTER_WHILE");
 
 
@@ -309,9 +360,6 @@ char* cgenStatement(Statement* stmt){
             //because there are only while loops currently, jump to AFTER_WHILEi
             //get the necessary label
             int label = whilecount-1;
-//            char buff[1000];
-//            snprintf(buff, 1000, "AFTER_WHILE%i", label);
-//            char *afterWhileLabel = strdup(buff);
             Arg* afterWhileLabel = newArg(ARG_LABEL, label, "AFTER_WHILE");
 
 
@@ -354,9 +402,6 @@ char* cgenStatement(Statement* stmt){
                 //in the IR, it is more compact to use the form "var = allocate(bytesize)"
                 if(stmt->decl->value==NULL) {
                     //the array is allocated with a integer
-//                    char buff[100];
-//                    snprintf(buff, 100, "%i", stmt->decl->size);
-//                    char* str = strdup(buff);
                     Arg* sizearg = newArg(ARG_VALUE, size, NULL);
                     Arg* name = newArg(ARG_VARIABLE, 0, stmt->decl->name);
                     appendInstruction(program,
