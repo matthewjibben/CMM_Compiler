@@ -12,7 +12,10 @@ typedef enum argType{
     ARG_VARIABLE,
     ARG_VALUE,
     ARG_LABEL,
-    ARG_STRING
+    ARG_STRING,
+    ARG_SP,
+    ARG_RA,
+    ARG_ZERO
 } argType;
 
 typedef struct Arg {
@@ -34,11 +37,21 @@ typedef enum instrType{
     INST_ASSIGN_SW,
     INST_ALLOCATE_ARRAY_VAR,
     INST_ALLOCATE_ARRAY_INT,
+    INST_WRITE_STR,
+    INST_WRITE_INT,
+    INST_READ,
+    INST_START_FUNC,
+    INST_END_FUNC,
+    INST_DOT_ENT,
+    INST_DOT_END,
+    INST_JR_RA,
+    INST_FUNCCALL, // for a function call we will need to: store each "s" in $sp, and store $ra. Store each parameter in $sp. jal function. after, we must delete the parameters, load all the "s" variables and $ra back
+    INST_ALLOCATE_SP,
+    INST_FREE_SP,
     INST_ASSIGN_UNARY,
     INST_JUMP,
     INST_COND_JUMP,
     INST_RELOP_JUMP,
-    PROCEDURE_CALL,     //is this necessary? in the book, it is really many instructions ... possibly JAL
     INDEX_ASSIGN,       // x[i] = y
     ASSIGN_INDEX        // x = y[i]
 } instrType;

@@ -427,7 +427,7 @@ Expr			: Primary		{ $$ = $1; }
 
 				$$ = newExpression(BOOL, $1, $3, NULL, NULL, $2, NULL);
 				}
-			| Call { $$ = $1; }
+				| Call { $$ = $1; }
 			| SimpleExpr {$$ = $1;} // getBranchWeight($1); cgen($1, 0); }
 			| Var ASSIGN Expr
 				{
@@ -594,7 +594,7 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Var
 				{
 				$$ = $1;
-				if($$->type == CHAR || $$->type == STRING || $$->type == BOOL) {
+				if($$->type == CHAR || $$->type == STRING) {
 					semError("Math expression values must be of type INT or FLOAT or BOOL");
 					YYABORT;
 				}
@@ -602,8 +602,8 @@ Factor			: LPAREN SimpleExpr RPAREN	{ $$ = $2; }
 			| Call
 				{
 				$$ = $1;
-				if($$->type == CHAR || $$->type == STRING || $$->type == BOOL) {
-					semError("Math expression values must be of type INT or FLOAT");
+				if($$->type == CHAR || $$->type == STRING) {
+					semError("Math expression values must be of type INT or FLOAT or BOOL");
 					YYABORT;
 				}
 				}
