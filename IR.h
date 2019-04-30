@@ -84,6 +84,6 @@ void appendInstruction(Program* prog, Instruction* instr);
 int getBranchWeight(Expression* expr);
 Arg* cgen(Expression* expr, int c);
 char* cgenStatement(Statement* stmt);
-
+void emitPrintStatement(Instruction* instruction);
 
 #endif //SYMBOLTABLE_IR_H

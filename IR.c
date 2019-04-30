@@ -78,6 +78,7 @@ void appendInstruction(Program* prog, Instruction* instr){
         prog->tail->next = instr;
         prog->tail = prog->tail->next;
     }
+    emitPrintStatement(instr);
 }
 
 void emit(Program* prog, FILE* output){
@@ -115,6 +116,46 @@ void emit(Program* prog, FILE* output){
         }
         else if(head->type == INST_FUNCCALL){
             fprintf(output, "functioncall %s\n", getArgString(head->arg1));
+        }
+        head = head->next;
+    }
+}
+
+void emitPrintStatement(Instruction* instruction){
+    Instruction* head = instruction;
+    while(head!=NULL){
+        if(head->type==INST_LABEL){
+            printf("\n%s:\n", getArgString(head->arg1));
+        }
+        else if(head->type == INST_ASSIGN){
+            printf("%s = %s\n", getArgString(head->arg1), getArgString(head->arg2));
+        }
+        else if(head->type == INST_ASSIGN_OP){
+            printf("%s = %s %s %s\n", getArgString(head->arg1), getArgString(head->arg2), head->op, getArgString(head->arg3));
+        }
+        else if(head->type == INST_COND_JUMP){
+            printf("%s %s %s\n", head->op, getArgString(head->arg1), getArgString(head->arg2));
+        }
+        else if(head->type == INST_JUMP){
+            printf("j %s\n", getArgString(head->arg1));
+        }
+        else if(head->type == INST_ALLOCATE_ARRAY_INT || head->type == INST_ALLOCATE_ARRAY_VAR){
+            printf("%s = allocate(%s)\n", getArgString(head->arg1), getArgString(head->arg2));
+        }
+        else if(head->type == INST_ASSIGN_LW){
+            printf("lw %s %s(%s)\n", getArgString(head->arg1), getArgString(head->arg2), getArgString(head->arg3));
+        }
+        else if(head->type == INST_ASSIGN_SW){
+            printf("sw %s %s(%s)\n", getArgString(head->arg1), getArgString(head->arg2), getArgString(head->arg3));
+        }
+        else if(head->type == INST_WRITE_INT || head->type == INST_WRITE_STR){
+            printf("write %s\n", getArgString(head->arg1));
+        }
+        else if(head->type == INST_READ){
+            printf("read\n");
+        }
+        else if(head->type == INST_FUNCCALL){
+            printf("functioncall %s\n", getArgString(head->arg1));
         }
         head = head->next;
     }
@@ -394,6 +435,7 @@ void loadRegistersStack(){
 
 char* cgenStatement(Statement* stmt){
     while(stmt!=NULL) {
+        printf("========================\n");
         if(stmt->type == STMT_IF_ELSE) {
             //for if else statements, generate a new label for each block using the counter
             int label = ifelseCount;
