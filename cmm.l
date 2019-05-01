@@ -48,7 +48,11 @@ number	{dig}+(\.({dig})+)?(E[+-]?({dig})+)?
 [ \t\r\f]  		{ adjust(); /* whitespace, do nothing */ }
 \/[\/]+.*           { adjust(); /* code comment, do nothing */ }
 
-\"[^\"\n]\"     { adjust(); yylval.sval = strdup(yytext); return SINGLECHAR; }
+\"[^\"\n]\"     { adjust();
+                    char buff[5];
+                    snprintf(buff, 5, "\'%c\'", yytext[1]);     // copy only the character value
+                    yylval.sval = strdup(buff);
+                    return SINGLECHAR; }
 \"([^\"\n]*)\"  { adjust(); yylval.sval = strdup(yytext); return CHARARRAY; }
 
 
