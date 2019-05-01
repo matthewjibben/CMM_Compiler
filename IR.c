@@ -44,7 +44,7 @@ char* getArgString(Arg* arg){
         snprintf(buff, 1000, "%i", arg->value);
         str = strdup(buff);
     }
-    else if(arg->type==ARG_VARIABLE || arg->type == ARG_STRING){
+    else if(arg->type==ARG_VARIABLE || arg->type == ARG_STRING || arg->type == ARG_CHAR){
         str = arg->name;
     }
     else if(arg->type == ARG_SP){
@@ -167,10 +167,11 @@ Arg* getArrayCellValue(Expression* expr, int c){
     if(expr->type!=CHAR){
         //if needed, multiply index by 4
         Expression* times4 = newExpression(INT, NULL, NULL, NULL, 4, NULL, NULL);
-        Expression* multiplication = newExpression(INT, expr->left, times4, NULL, NULL, "*", NULL);
+        Expression* multiplication = newExpression(INT, expr->left, times4, NULL, 0, "*", NULL);
+        getBranchWeight(multiplication);
         index = cgen(multiplication, c);
-        freeExpression(times4);
-        freeExpression(multiplication);
+        free(times4);
+        free(multiplication);
     }
     else {
         index = cgen(expr->left, c);
@@ -197,8 +198,8 @@ Arg* getArrayCell(Expression* expr, int c){
         Expression* times4 = newExpression(INT, NULL, NULL, NULL, 4, NULL, NULL);
         Expression* multiplication = newExpression(INT, expr->left, times4, NULL, NULL, "*", NULL);
         index = cgen(multiplication, c);
-        freeExpression(times4);
-        freeExpression(multiplication);
+        free(times4);
+        free(multiplication);
     }
     else {
         index = cgen(expr->left, c);
@@ -250,8 +251,8 @@ Arg* cgen(Expression* expr, int c){
                 Expression* multiplication = newExpression(INT, expr, negate, NULL, NULL, "*", NULL);
                 Arg* negativeVal = cgen(multiplication, c);
 
-                freeExpression(negate);
-                freeExpression(multiplication);
+                free(negate);
+                free(multiplication);
                 return negativeVal;
             }
             if(expr->isUnaryNot){
@@ -301,6 +302,9 @@ Arg* cgen(Expression* expr, int c){
         }
         else if(expr->type == STRING){
             return newArg(ARG_STRING, 0, expr->sval);
+        }
+        else if(expr->type == CHAR){
+            return newArg(ARG_CHAR, 0, expr->sval);
         }
     }
     if(expr->isArrayCell){

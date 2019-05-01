@@ -13,6 +13,7 @@ typedef enum argType{
     ARG_VALUE,
     ARG_LABEL,
     ARG_STRING,
+    ARG_CHAR,
     ARG_SP,
     ARG_RA,
     ARG_ZERO
