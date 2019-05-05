@@ -112,6 +112,12 @@ progam			: StmtList
 Declaration		: VarDec	{$$=$1;}
 			| FunDec Block
 				{
+				// SEMANTIC CHECK:
+				// Does the function code block contain a return statement?
+				if(!$1->hasReturn){
+					semError("Function body must contain a return statement");
+					YYABORT;
+				}
 				$1->codeBlock = $2;
 				$$=$1;
 				}
@@ -158,7 +164,7 @@ VarDec			: Type ID SEMICOLON
 					//SEMANTIC CHECK
 					//If a variable is given, it must be an integer
 					if($4->type != INT || $4->isArray){
-						semError("Array index must be an integer");
+						semError("Array size must be an integer");
 						YYABORT;
 					}
 					$$ = newDeclaration($2, true, $1, NULL, NULL, $4, NULL, NULL);
@@ -300,6 +306,9 @@ Stmt			: SEMICOLON		//no operation?
 							semError("Expected return type %s, got %s", declType, exprType);
 							YYABORT;
 						}
+						// if the environment correctly has a return statement, set hasReturn to true
+						// this will be used in a semantic check later to ensure all functions have a return
+						tempenv->decl->hasReturn = true;
 						break;
 					}
 					tempenv = tempenv->prev;
@@ -506,7 +515,13 @@ Var			: ID
 					semError("Expected integer in array index, got array");
 					YYABORT;
 				}
-
+				//if a number is given, it cannot be negative
+				if($3->left == NULL && $3->right == NULL){
+					if($3->isUnaryNegate){
+						semError("Array index must be positive");
+						YYABORT;
+					}
+				}
 				// the expression is placed on the left side, nothing on the right
 				$$ = newExpression(idSymbol->decl->type, $3, NULL, $1, $3->ival, NULL, NULL);			//todo should $3->ival be here?
 				$$->isArrayCell = true;

@@ -78,7 +78,7 @@ void appendInstruction(Program* prog, Instruction* instr){
         prog->tail->next = instr;
         prog->tail = prog->tail->next;
     }
-    emitPrintStatement(instr);
+    //emitPrintStatement(instr);
 }
 
 void emit(Program* prog, FILE* output){
@@ -439,7 +439,7 @@ void loadRegistersStack(){
 
 char* cgenStatement(Statement* stmt){
     while(stmt!=NULL) {
-        printf("========================\n");
+        //printf("========================\n");
         if(stmt->type == STMT_IF_ELSE) {
             //for if else statements, generate a new label for each block using the counter
             int label = ifelseCount;

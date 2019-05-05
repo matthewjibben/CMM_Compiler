@@ -52,6 +52,7 @@ typedef struct Declaration{
     int type;
 
     int returnType;                 // only used for function declarations
+    bool hasReturn;                 // only used for function declaration semantic checks
 
     struct Expression* value;        // this is the expression that is assigned to the variable
     struct Statement* codeBlock;    // used for function assignments
