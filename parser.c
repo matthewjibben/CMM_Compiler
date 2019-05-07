@@ -29,8 +29,10 @@ int main(int argc, char **argv)
     program = malloc(sizeof(program));
 
     outputTAC = fopen("./output.tac", "w");
-    //fprintf(output, ".data\nnewline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
     fprintf(outputTAC, "===TAC FILE===\n");
+
+    output = fopen("code.asm", "w");
+    fprintf(output, ".data\n_newline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
 
     // create initial global environment
     env = newEnvironment(NULL);

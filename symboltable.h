@@ -39,6 +39,7 @@ typedef struct Env{
     struct Symbol* head;    // head of the linked list of symbols
     struct Symbol* tail;
     struct Env* prev;
+    int ID;         // each environment is given a unique when it is created
 } Env ;
 
 //void initEnv(struct Env* env, struct Env* previous);

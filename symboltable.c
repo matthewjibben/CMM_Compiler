@@ -17,13 +17,7 @@ void deleteSym(struct Symbol* sym){
 
 
 // ======================= Environment =======================
-//void initEnv(struct Env* env, struct Env* previous){
-//    //set the size to 0, it will be changed once we make insertions
-//    env->size = 0;
-//    //The table currently has no elements, the array will be increased as needed
-//    env->prev = previous;
-//    env->head = env->tail = NULL;
-//}
+int envIDCount = 0;
 
 Env* newEnvironment(struct Env* previous){
     Env* temp = malloc(sizeof(struct Env));
@@ -33,6 +27,7 @@ Env* newEnvironment(struct Env* previous){
     //The table currently has no elements, the array will be increased as needed
     temp->prev = previous;
     temp->head = temp->tail = NULL;
+    temp->ID = envIDCount++;
     return temp;
 }
 
@@ -140,7 +135,7 @@ void deleteItem(struct Env* env, char* id){
 void printEnv(struct Env* env){
     struct Symbol* temp = env->head;
     if(temp!=NULL) {
-        printf("============Size: %i=============\n", env->size);
+        printf("============Size: %i ID: %i=============\n", env->size, env->ID);
         for (int i = 0; i < env->size; ++i) {
             printf("====================================\n");
             // print all necessary information here
@@ -166,7 +161,7 @@ void printEnv(struct Env* env){
         }
         printf("====================================\n");
     } else {
-        printf("=================Empty Env=================\n");
+        printf("=================Empty Env ID: %i=================\n", env->ID);
         printf("====================================\n");
     }
 }

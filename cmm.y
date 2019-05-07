@@ -109,7 +109,7 @@ progam			: StmtList
 
 /* =============================================== */
 
-Declaration		: VarDec	{$$=$1;}
+Declaration		: VarDec	{$$=$1; $$->envID = env->ID;}
 			| FunDec Block
 				{
 				// SEMANTIC CHECK:
@@ -484,7 +484,7 @@ Var			: ID
 
 				$$ = newExpression(idSymbol->decl->type, NULL, NULL, $1, NULL, NULL, NULL);
 				$$->isArray = idSymbol->decl->isArray;  //not really necessary because arrays must be called with an index
-
+				$$->envID = idSymbol->decl->envID;
 
 				}  //todo symboltable lookup
 			| ID LSQUARE Expr RSQUARE
@@ -526,6 +526,8 @@ Var			: ID
 				$$ = newExpression(idSymbol->decl->type, $3, NULL, $1, $3->ival, NULL, NULL);			//todo should $3->ival be here?
 				$$->isArrayCell = true;
 				//$$->isArray = idSymbol->decl->isArray;
+				$$->envID = idSymbol->decl->envID;
+
 
 
 				}

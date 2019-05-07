@@ -180,7 +180,12 @@ Arg* getArrayCellValue(Expression* expr, int c){
     // to use the value, do lw $t1 0($t0)
     // to set a value, do sw $t2 0($t0)
     Arg* cell = newArg(ARG_REGISTER, c, "t");
-    Arg* name = newArg(ARG_VARIABLE, 0, expr->name);
+
+    char buff[1000];
+    snprintf(buff, 1000, "%s%i", expr->name, expr->envID);
+    char* exprName = strdup(buff);
+
+    Arg* name = newArg(ARG_VARIABLE, 0, exprName);
 
     Arg* zero = newArg(ARG_VALUE, 0, NULL);
     Arg* value = newArg(ARG_REGISTER, c+1, "t");
@@ -208,7 +213,12 @@ Arg* getArrayCell(Expression* expr, int c){
     // to use the value, do lw $t1 0($t0)
     // to set a value, do sw $t2 0($t0)
     Arg* cell = newArg(ARG_REGISTER, c, "t");
-    Arg* name = newArg(ARG_VARIABLE, 0, expr->name);
+
+    char buff[1000];
+    snprintf(buff, 1000, "%s%i", expr->name, expr->envID);
+    char* exprName = strdup(buff);
+
+    Arg* name = newArg(ARG_VARIABLE, 0, exprName);
 
     appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
     return cell;
@@ -242,7 +252,15 @@ Arg* cgen(Expression* expr, int c){
     if(expr->left==NULL && expr->right==NULL){
         //if it is a value, return the value. otherwise return the string name
         if(expr->name!= NULL){
-            Arg* varName = newArg(ARG_VARIABLE, 0, expr->name);
+            // whenever a variable is used, we must add the environment ID to it
+            // this helps differentiate IDs that have the same name in different environments
+
+            char buff[1000];
+            snprintf(buff, 1000, "%s%i", expr->name, expr->envID);
+            char* exprName = strdup(buff);
+
+
+            Arg* varName = newArg(ARG_VARIABLE, 0, exprName);
             // if the value is unary negated, we need to convert to negative through multiplying by -1
             if(expr->isUnaryNegate){
                 // add an expression (value * -1) and get the output $tX = value * -1
@@ -629,7 +647,11 @@ char* cgenStatement(Statement* stmt){
                 Arg* value;
                 value = cgen(stmt->decl->value, 0);
 
-                Arg* name = newArg(ARG_VARIABLE, 0, stmt->decl->name);
+                char buff[1000];
+                snprintf(buff, 1000, "%s%i", stmt->decl->name, stmt->decl->envID);
+                char* exprName = strdup(buff);
+
+                Arg* name = newArg(ARG_VARIABLE, 0, exprName);
 
                 //build the instruction and add to the program
                 appendInstruction(program, newInstruction(INST_ASSIGN, name, value, NULL, NULL));
@@ -647,11 +669,19 @@ char* cgenStatement(Statement* stmt){
                 if(stmt->decl->value==NULL) {
                     //the array is allocated with a integer
                     Arg* sizearg = newArg(ARG_VALUE, size, NULL);
-                    Arg* name = newArg(ARG_VARIABLE, 0, stmt->decl->name);
+                    char buff[1000];
+                    snprintf(buff, 1000, "%s%i", stmt->decl->name, stmt->decl->envID);
+                    char* exprName = strdup(buff);
+                    Arg* name = newArg(ARG_VARIABLE, 0, exprName);
                     appendInstruction(program,
                                       newInstruction(INST_ALLOCATE_ARRAY_INT, name, sizearg, NULL, NULL));
                 } else {
                     Arg* name = newArg(ARG_VARIABLE, 0, stmt->decl->name);
+
+                    char buff[1000];
+                    snprintf(buff, 1000, "%s%i", stmt->decl->value->name, stmt->decl->value->envID);
+                    char* exprName = strdup(buff);
+
                     Arg* varname = newArg(ARG_VARIABLE, 0, stmt->decl->value->name);
                     //the array is allocated using a variable
                     appendInstruction(program,

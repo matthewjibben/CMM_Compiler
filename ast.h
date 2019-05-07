@@ -57,6 +57,9 @@ typedef struct Declaration{
     struct Expression* value;        // this is the expression that is assigned to the variable
     struct Statement* codeBlock;    // used for function assignments
     struct ParamList* params;       // this is the list of parameters in a function declaration
+
+    int envID;                      // ID for the environment the variable was declared in.
+                                    // This is used in IR to differentiate variables with the same name in different envs
     //todo should the size of the ParamList be included?
     //struct Declaration* next;       // this is the next declaration
 } Declaration;
@@ -121,6 +124,9 @@ typedef struct Expression{
     ArgList* args;
 
     int weight;     // this is used in IR generation for tree translation
+
+    int envID;      // ID for the environment the variable was declared in.
+                    // This is used in IR to differentiate variables with the same name in different envs
 
 } Expression;
 
