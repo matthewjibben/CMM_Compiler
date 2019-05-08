@@ -64,6 +64,7 @@ typedef struct Instruction {
     Arg* arg3;
     char* op;
     struct Instruction* next;
+    struct Instruction* prev;
 } Instruction;
 
 
@@ -81,6 +82,8 @@ typedef struct Program {
 
 Instruction* newInstruction(instrType type, Arg* arg1, Arg* arg2, Arg* arg3, char* op);
 void appendInstruction(Program* prog, Instruction* instr);
+void removeInstruction(Instruction* instr, Program* program);
+bool areArgsEqual(Arg* arg1, Arg* arg2);
 
 int getBranchWeight(Expression* expr);
 Arg* cgen(Expression* expr, int c);

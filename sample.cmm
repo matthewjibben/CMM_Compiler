@@ -2,6 +2,10 @@ int x = 0;
 x = 5;
 int abc = 12;
 int abc2 = 13;
+string mbrd = "asdf";
+mbrd = "mbrd";
+write x;
+write abc;
 string myfunc(int a, string b, char c){
     int asdf;
     asdf = 123;

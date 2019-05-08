@@ -76,10 +76,30 @@ void appendInstruction(Program* prog, Instruction* instr){
         prog->head = prog->tail = instr;
     } else {
         prog->tail->next = instr;
+        instr->prev = prog->tail;
         prog->tail = prog->tail->next;
     }
     //emitPrintStatement(instr);
 }
+
+void removeInstruction(Instruction* instr, Program* program){
+    if(instr->prev!=NULL){
+        instr->prev->next = instr->next;
+    }
+    else {
+        // instruction is the head of program, move head
+        program->head = program->head->next;
+    }
+    if(instr->next!=NULL){
+        instr->next->prev = instr->prev;
+    }
+    else {
+        // instruction is the tail of program, move tail
+        program->tail = program->tail->next;
+    }
+    free(instr);
+}
+
 
 void emit(Program* prog, FILE* output){
     Instruction* head = prog->head;
@@ -123,7 +143,7 @@ void emit(Program* prog, FILE* output){
 
 void emitPrintStatement(Instruction* instruction){
     Instruction* head = instruction;
-    while(head!=NULL){
+//    while(head!=NULL){
         if(head->type==INST_LABEL){
             printf("\n%s:\n", getArgString(head->arg1));
         }
@@ -158,7 +178,7 @@ void emitPrintStatement(Instruction* instruction){
             printf("functioncall %s\n", getArgString(head->arg1));
         }
         head = head->next;
-    }
+//    }
 }
 
 Arg* getArrayCellValue(Expression* expr, int c){
@@ -724,6 +744,16 @@ char* cgenStatement(Statement* stmt){
         stmt = stmt->next;
     }
 }
+
+bool areArgsEqual(Arg* arg1, Arg* arg2){
+    if(arg1->type!=arg2->type){
+        return false;
+    }
+    else {
+        return (strcmp(arg1->name, arg2->name)==0) && (arg1->value == arg2->value);
+    }
+}
+
 int calculateExpression(Arg* arg1, Arg* arg2, char* op){
     if(strcmp(op, "+")==0){
         return arg1->value + arg2->value;
@@ -771,22 +801,34 @@ bool isBlockEnd(Instruction* inst){
     return false;
 }
 
+bool isAssign(Instruction* inst){
+    int endBlockTypes[5] = {INST_ASSIGN, INST_ASSIGN_OP, INST_ASSIGN_LW,
+                            INST_ALLOCATE_ARRAY_VAR, INST_ALLOCATE_ARRAY_INT}; // remove sw?
+    for(int i=0; i<5; ++i){
+        if(inst->type==endBlockTypes[i]){
+            return true;
+        }
+    }
+    return false;
+}
+
 Program* getBasicBlock(Instruction* head){
     Program* basicBlock = malloc(sizeof(Program));
     if(basicBlock==NULL){exit(EXIT_FAILURE);} // malloc error, exit
     basicBlock->head = basicBlock->tail = head;
     // getting the basic block
     Instruction* current = head->next;
-    if(current!=NULL){
-        if(!isBlockEnd(current)){
-            appendInstruction(basicBlock, current);
-        }
+    int size = 1;
+    while(current!=NULL && !isBlockEnd(current)){
+        size++;
+        appendInstruction(basicBlock, current);
+        current = current->next;
     }
+//    printf("blocksize: %i\n", size);
     return basicBlock;
 }
 bool simpleExpressionEvaluation(Program* block){
     bool ranOptimization = false;
-    // traverse through the IR and run optimizations
     // OPTIMIZATION #1:
     //  simple expression calculation
     //  when there is a expression of the form "1 + 2", it is more effective to calculate it immediately
@@ -809,16 +851,87 @@ bool simpleExpressionEvaluation(Program* block){
     }
     return ranOptimization;
 }
+bool isValueUsed(Arg* value, Instruction* head, Instruction* tail){
+    // traverse through the given section of code and find if the value is ever used
+    // if the value is assigned again, the check can stop there
+    Instruction* current = head;
+    printf("is val %s used?\n", value->name);
+    while(current!=tail->next && current!=NULL){
+        if(current->arg2!=NULL && (areArgsEqual(current->arg2, value))) {
+            return true;
+        }
+        if(current->arg3!=NULL && areArgsEqual(current->arg3, value)) {
+            return true;
+        }
+
+        if(isAssign(current)){
+            if(areArgsEqual(current->arg1, value)){
+                // the variable is being set to a different value without using the original one, break
+                printf("false\n");
+                return false;
+            }
+        }
+        else {
+            if(current->arg1!=NULL && areArgsEqual(current->arg1, value)) {
+                return true;
+            }
+        }
+        current = current->next;
+    }
+    return true;
+}
+
+
+
+bool deadCodeRemoval(Program* block, Program* program){
+    bool ranOptimization = false;
+    // OPTIMIZATION #2:
+    //  run a liveness analysis on each variable in the block
+    //  if a variable is assigned to a value but that value is never used, there is no need to assign it
+    Instruction* current = block->head;
+    Instruction* next;
+
+//    printf("\n==============\n");
+//    emitPrintStatement(block->head);
+//    emitPrintStatement(block->tail);
+
+    while(current!=NULL && current!=block->tail){
+        next = current->next;
+        if(isAssign(current)){
+            // if the instruction is an assign, check all of the instructions in the block and see if the value is used
+            // check all instructions after the current one
+            if(!isValueUsed(current->arg1, current->next, block->tail)){
+                // if this is the head or tail of the block, move the head/tail
+                if(block->head==block->tail){
+                    block->head = block->tail = NULL;
+                }
+                if(current == block->head){
+                    block->head = block->head->next;
+                }
+                if(current == block->tail){
+                    block->tail = block->tail->prev;
+                }
+                // remove the instruction
+                removeInstruction(current, program);
+            }
+        }
+        current = next;
+    }
+    return ranOptimization;
+}
 
 void optimizeIR(Program* program){
     Instruction* current = program->head;
-    // loop through all basic blocks in the program
+    // loop through all basic blocks in the program and run optimizations
     while(current!=NULL) {
         Program* basicBlock = getBasicBlock(current);
         current = basicBlock->tail->next;
 
         // Optimization 1
         simpleExpressionEvaluation(basicBlock);
+
+        // Optimization 2
+        deadCodeRemoval(basicBlock, program);
 
     }
 
