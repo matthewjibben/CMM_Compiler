@@ -101,6 +101,7 @@ progam			: StmtList
 				printEnv(env);
 
 				cgenStatement($1->head);
+				optimizeIR(program);
 				emit(program, outputTAC);
 				freeStatement($1->head);
 				freeStmtList($1);

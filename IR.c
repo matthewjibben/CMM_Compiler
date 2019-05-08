@@ -724,3 +724,102 @@ char* cgenStatement(Statement* stmt){
         stmt = stmt->next;
     }
 }
+int calculateExpression(Arg* arg1, Arg* arg2, char* op){
+    if(strcmp(op, "+")==0){
+        return arg1->value + arg2->value;
+    }
+    else if(strcmp(op, "-")==0){
+        return arg1->value - arg2->value;
+    }
+    else if(strcmp(op, "*")==0){
+        return arg1->value * arg2->value;
+    }
+    else if(strcmp(op, "/")==0){
+        return arg1->value / arg2->value;
+    }
+    else if(strcmp(op, "==")==0){
+        return arg1->value == arg2->value;
+    }
+    else if(strcmp(op, "!=")==0){
+        return arg1->value != arg2->value;
+    }
+    else if(strcmp(op, ">")==0){
+        return arg1->value > arg2->value;
+    }
+    else if(strcmp(op, "<")==0){
+        return arg1->value < arg2->value;
+    }
+    else if(strcmp(op, ">=")==0){
+        return arg1->value >= arg2->value;
+    }
+    else if(strcmp(op, "<=")==0){
+        return arg1->value <= arg2->value;
+    }
+}
+
+// the Program data structure can be repurposed to be used for basic blocks
+// basic blocks are sections of code that are always run together
+// whenever a jump occurs, a new basic block is started
+bool isBlockEnd(Instruction* inst){
+    int endBlockTypes[8] = {INST_LABEL, INST_START_FUNC, INST_END_FUNC, INST_DOT_ENT,
+                           INST_JR_RA, INST_FUNCCALL, INST_JUMP, INST_COND_JUMP};
+    for(int i=0; i<8; ++i){
+        if(inst->type==endBlockTypes[i]){
+            return true;
+        }
+    }
+    return false;
+}
+
+Program* getBasicBlock(Instruction* head){
+    Program* basicBlock = malloc(sizeof(Program));
+    if(basicBlock==NULL){exit(EXIT_FAILURE);} // malloc error, exit
+    basicBlock->head = basicBlock->tail = head;
+    // getting the basic block
+    Instruction* current = head->next;
+    if(current!=NULL){
+        if(!isBlockEnd(current)){
+            appendInstruction(basicBlock, current);
+        }
+    }
+    return basicBlock;
+}
+bool simpleExpressionEvaluation(Program* block){
+    bool ranOptimization = false;
+    // traverse through the IR and run optimizations
+    // OPTIMIZATION #1:
+    //  simple expression calculation
+    //  when there is a expression of the form "1 + 2", it is more effective to calculate it immediately
+    //  this can save calculations when they are run many time in MIPS
+    Instruction* current = block->head;
+    // loop through all instructions in the block
+    while(current!=NULL) {
+        if (current->type == INST_ASSIGN_OP) {
+            if (current->arg2->type == ARG_VALUE && current->arg3->type == ARG_VALUE) {
+                // run calculation
+                int value = calculateExpression(current->arg2, current->arg3, current->op);
+                current->type = INST_ASSIGN;
+                current->arg2->value = value;
+                free(current->arg3);
+                ranOptimization = true;
+            }
+
+        }
+        current = current->next;
+    }
+    return ranOptimization;
+}
+
+void optimizeIR(Program* program){
+    Instruction* current = program->head;
+    // loop through all basic blocks in the program
+    while(current!=NULL) {
+        Program* basicBlock = getBasicBlock(current);
+        current = basicBlock->tail->next;
+
+        // Optimization 1
+        simpleExpressionEvaluation(basicBlock);
+
+    }
+
+}
