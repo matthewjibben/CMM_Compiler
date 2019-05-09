@@ -14,6 +14,7 @@ extern FILE* yyin;
 extern FILE* output;
 extern FILE* outputTAC;
 extern Env* env;
+extern Env* mipsEnv;
 extern Program* program;
 int main(int argc, char **argv)
 {
@@ -35,6 +36,7 @@ int main(int argc, char **argv)
     fprintf(output, ".data\n_newline: .asciiz \"\\n\"\n.text\n.globl main\nmain:\n");
 
     // create initial global environment
+    mipsEnv = newEnvironment(NULL);
     env = newEnvironment(NULL);
     env->type = 0; //global type
     //Declaration* decl1 = newDeclaration("testName", false, STRING, NULL, NULL, NULL, NULL, NULL);

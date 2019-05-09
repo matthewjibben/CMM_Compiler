@@ -6,6 +6,7 @@
 #include "ast.h"
 #include "symboltable.h"
 #include "IR.h"
+#include "codeGen.c"
 
 int yylex(void);
 void yyerror(const char*);
@@ -14,6 +15,7 @@ FILE* output;
 FILE* outputTAC;
 
 Env* env;
+Env* mipsEnv;
 bool envStartSwitch = false;
 
 Program* program;
@@ -103,6 +105,8 @@ progam			: StmtList
 				cgenStatement($1->head);
 				optimizeIR(program);
 				emit(program, outputTAC);
+				codeGen(program, output);
+
 				freeStatement($1->head);
 				freeStmtList($1);
 				}

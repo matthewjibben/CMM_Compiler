@@ -84,6 +84,7 @@ Instruction* newInstruction(instrType type, Arg* arg1, Arg* arg2, Arg* arg3, cha
 void appendInstruction(Program* prog, Instruction* instr);
 void removeInstruction(Instruction* instr, Program* program);
 bool areArgsEqual(Arg* arg1, Arg* arg2);
+char* getArgString(Arg* arg);
 
 int getBranchWeight(Expression* expr);
 Arg* cgen(Expression* expr, int c);
