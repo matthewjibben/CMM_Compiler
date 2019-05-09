@@ -855,7 +855,7 @@ bool isValueUsed(Arg* value, Instruction* head, Instruction* tail){
     // traverse through the given section of code and find if the value is ever used
     // if the value is assigned again, the check can stop there
     Instruction* current = head;
-    printf("is val %s used?\n", value->name);
+//    printf("is val %s used?\n", value->name);
     while(current!=tail->next && current!=NULL){
         if(current->arg2!=NULL && (areArgsEqual(current->arg2, value))) {
             return true;
@@ -867,7 +867,6 @@ bool isValueUsed(Arg* value, Instruction* head, Instruction* tail){
         if(isAssign(current)){
             if(areArgsEqual(current->arg1, value)){
                 // the variable is being set to a different value without using the original one, break
-                printf("false\n");
                 return false;
             }
         }
@@ -891,10 +890,6 @@ bool deadCodeRemoval(Program* block, Program* program){
     Instruction* current = block->head;
     Instruction* next;
 
-//    printf("\n==============\n");
-//    emitPrintStatement(block->head);
-//    emitPrintStatement(block->tail);
-
     while(current!=NULL && current!=block->tail){
         next = current->next;
         if(isAssign(current)){
@@ -913,9 +908,70 @@ bool deadCodeRemoval(Program* block, Program* program){
                 }
                 // remove the instruction
                 removeInstruction(current, program);
+                ranOptimization = true;
             }
         }
         current = next;
+    }
+    return ranOptimization;
+}
+
+bool propagateCostant(Arg* var, Arg* value, Instruction* head, Instruction* tail){
+    bool ranOptimization = false;
+    // take the given variable and set all future uses of it to the value, if possible
+    Instruction* current = head;
+    while(current!=NULL && current!=tail->next){
+        if(isAssign(current) && areArgsEqual(current->arg1, value)){
+            // the variable is reassigned to a new value, stop constant propagation
+            break;
+        }
+        else if(current->type == INST_ASSIGN_OP || current->type == INST_ASSIGN){
+            // if the instruction is an assign or assign op, we can propagate the constant if possible
+            if(current->arg2 != NULL && areArgsEqual(current->arg2, var)){
+                Arg* newArgument = newArg(value->type, value->value, value->name);
+                current->arg2 = newArgument;
+                ranOptimization = true;
+//                printf("ran opt:\n");
+//                emitPrintStatement(current);
+//                printf("\n");
+            }
+            if(current->arg3 != NULL && areArgsEqual(current->arg3, var)){
+                Arg* newArgument = newArg(value->type, value->value, value->name);
+                current->arg3 = newArgument;
+                ranOptimization = true;
+//                printf("ran opt\n");
+//                emitPrintStatement(current);
+//                printf("\n");
+            }
+        }
+        else if(current->type == INST_WRITE_INT || current->type == INST_WRITE_STR){
+            if(current->arg1 != NULL && areArgsEqual(current->arg1, var)){
+                Arg* newArgument = newArg(value->type, value->value, value->name);
+                current->arg1 = newArgument;
+                ranOptimization = true;
+//                printf("ran opt\n");
+//                emitPrintStatement(current);
+//                printf("\n");
+            }
+        }
+        current = current->next;
+    }
+    return ranOptimization;
+}
+
+bool constantPropogation(Program* block){
+    bool ranOptimization = false;
+    // OPTIMIZATION #3:
+    //  If a variable/register is set to a constant value, set all future uses to that value
+    //  This saves time so that the variable does not have to be read many times
+    //  this also opens up possibilities for other optimizations such as simplifying entire math expressions
+    Instruction* current = block->head;
+    while(current!=NULL && current!=block->tail){
+        if(current->type == INST_ASSIGN){
+            // if the register/variable is assigned to a constant, edit all future uses of it (as possible)
+            ranOptimization = propagateCostant(current->arg1, current->arg2, current->next, block->tail);
+        }
+        current = current->next;
     }
     return ranOptimization;
 }
@@ -933,6 +989,8 @@ void optimizeIR(Program* program){
         // Optimization 2
         deadCodeRemoval(basicBlock, program);
 
+        // Optimization 3
+        constantPropogation(basicBlock);
     }
 
 }
