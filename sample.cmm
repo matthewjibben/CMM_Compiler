@@ -34,9 +34,9 @@ string myfunc(int a, string b, char c){
     }
     int x[12];
     int y[10];
-    y[2] = 123;
-    x[y[1]] = 123;
-    int myint = -123;
+    y[2] = 1237;
+    x[y[1]] = 1231;
+    int myint = -1230;
     string mystr;
     x[1] = 12;
     x[2] = (1-5);
