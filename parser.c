@@ -46,6 +46,10 @@ int main(int argc, char **argv)
     // begin
     printf("\n\nProcess finished with exit code: %i\n\n\n", yyparse());
 
+    //add exit syscall for MIPS
+    fprintf(output, "\n__exit: \nli $v0 10\nsyscall");
+
+
     //printEnv(env);
 //    fprintf(output, "exit:\n");
 //    fprintf(output, "li $v0 4\t \t# load the print string syscall\n");

@@ -28,6 +28,8 @@ typedef struct Arg {
     // for a label, both name and value are used
     int value;
     char* name;
+
+    int dataType;
 } Arg;
 
 typedef enum instrType{
@@ -85,6 +87,7 @@ void appendInstruction(Program* prog, Instruction* instr);
 void removeInstruction(Instruction* instr, Program* program);
 bool areArgsEqual(Arg* arg1, Arg* arg2);
 char* getArgString(Arg* arg);
+Arg* newArg(argType type, int value, char* name);
 
 int getBranchWeight(Expression* expr);
 Arg* cgen(Expression* expr, int c);

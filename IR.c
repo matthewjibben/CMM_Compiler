@@ -206,6 +206,7 @@ Arg* getArrayCellValue(Expression* expr, int c){
     char* exprName = strdup(buff);
 
     Arg* name = newArg(ARG_VARIABLE, 0, exprName);
+    name->dataType = expr->type;
 
     Arg* zero = newArg(ARG_VALUE, 0, NULL);
     Arg* value = newArg(ARG_REGISTER, c+1, "t");
@@ -239,6 +240,7 @@ Arg* getArrayCell(Expression* expr, int c){
     char* exprName = strdup(buff);
 
     Arg* name = newArg(ARG_VARIABLE, 0, exprName);
+    name->dataType = expr->type;
 
     appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
     return cell;
@@ -281,6 +283,8 @@ Arg* cgen(Expression* expr, int c){
 
 
             Arg* varName = newArg(ARG_VARIABLE, 0, exprName);
+            varName->dataType = expr->type;
+
             // if the value is unary negated, we need to convert to negative through multiplying by -1
             if(expr->isUnaryNegate){
                 // add an expression (value * -1) and get the output $tX = value * -1
@@ -672,6 +676,9 @@ char* cgenStatement(Statement* stmt){
                 char* exprName = strdup(buff);
 
                 Arg* name = newArg(ARG_VARIABLE, 0, exprName);
+                name->dataType = stmt->decl->type; //todo?
+
+
 
                 //build the instruction and add to the program
                 appendInstruction(program, newInstruction(INST_ASSIGN, name, value, NULL, NULL));
@@ -693,16 +700,20 @@ char* cgenStatement(Statement* stmt){
                     snprintf(buff, 1000, "%s%i", stmt->decl->name, stmt->decl->envID);
                     char* exprName = strdup(buff);
                     Arg* name = newArg(ARG_VARIABLE, 0, exprName);
+                    name->dataType = stmt->decl->type;
+
                     appendInstruction(program,
                                       newInstruction(INST_ALLOCATE_ARRAY_INT, name, sizearg, NULL, NULL));
                 } else {
                     Arg* name = newArg(ARG_VARIABLE, 0, stmt->decl->name);
+                    name->dataType = stmt->decl->type;
 
                     char buff[1000];
                     snprintf(buff, 1000, "%s%i", stmt->decl->value->name, stmt->decl->value->envID);
                     char* exprName = strdup(buff);
 
                     Arg* varname = newArg(ARG_VARIABLE, 0, stmt->decl->value->name);
+                    varname->dataType = stmt->decl->type;
                     //the array is allocated using a variable
                     appendInstruction(program,
                                       newInstruction(INST_ALLOCATE_ARRAY_VAR, name, varname, NULL, NULL));
