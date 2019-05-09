@@ -3,10 +3,14 @@ x = 5;
 int abc = 12;
 int abc2 = 13;
 string mbrd = "asdf";
-mbrd = "mbrd";
 write x;
 write abc;
-string myfunc(int a, string b, char c){
+
+
+
+
+
+int myfunc(int a, string b, char c){
     int asdf;
     asdf = 123;
     int mylist[10];
@@ -43,24 +47,24 @@ string myfunc(int a, string b, char c){
     int x2 = 129 * 2001 + 25 - 7;
     //runFunction(123, asdf, "input");
     // comments?
-    return "thestring";
+    return 1999;
 }
 
-string buildString(int i, string j){
+int buildString(int i, string j){
     int h = 0;
     int myfunc=10;
     myfunc(1, "asdf", "a");
     while(h<i){
         h = h+1;
         write j;
-        return "asd";
+        write "asd";
+        return -1;
     }
 }
 
 int z = 12;
 int asdfg = 1;
-string tester;
-tester = myfunc(123, "asd", "a");
+string tester = "testing";
 if(z == 10){
     write z;
     string tests;
@@ -81,15 +85,14 @@ char getChar(int type){
     }
 }
 int main() {
-    string x = myfunc(1, "asd", "a");
+    string x = "xsd"; //myfunc(1, "asd", "a");
     int tester123 = 123;
     int xyz = 123;
     //int x = 123;
     //int b;
     z = 234;
     char x2;
-    string c;
-    c = myfunc(1, c, "3");
+    string c = "mystr";
     int n = 123;
     int extra = (1 * 2) + 5 / n;
     2 > 3;

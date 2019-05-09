@@ -6,7 +6,7 @@
 #include "ast.h"
 #include "symboltable.h"
 #include "IR.h"
-#include "codeGen.c"
+#include "codeGen.h"
 
 int yylex(void);
 void yyerror(const char*);
@@ -187,6 +187,12 @@ FunDec			: Type ID LPAREN Params RPAREN
 				// Function declarations are only allowed inside of the global environment
 				if(env->type != 0){
 					semError("Error in %s declaration: functions must be in the global scope", $2);
+					YYABORT;
+				}
+				//SEMANTIC CHECK
+				// functions cannot return strings
+				if($1 == STRING){
+					semError("Functions cannot return strings");
 					YYABORT;
 				}
 				$$ = newDeclaration($2, false, FUNCTION, $1, NULL, NULL, NULL, $4);
@@ -460,6 +466,12 @@ Expr			: Primary		{ $$ = $1; }
 				//variable cannot be assigned to an entire array
 				if($3->isArray){
 					semError("Variable cannot be assigned to an entire array");
+					YYABORT;
+				}
+				//SEMANTIC CHECK
+				//string are immutable
+				if($3->type == STRING){
+					semError("Strings are immutable");
 					YYABORT;
 				}
 				$$ = newExpression(ASSIGN, $1, $3, NULL, NULL, "=", NULL);
