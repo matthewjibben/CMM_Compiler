@@ -42,6 +42,8 @@ typedef enum instrType{
     INST_ALLOCATE_ARRAY_INT,
     INST_WRITE_STR,
     INST_WRITE_INT,
+    INST_WRITE_CHR,
+    INST_WRITELN,
     INST_READ,
     INST_START_FUNC,
     INST_END_FUNC,
