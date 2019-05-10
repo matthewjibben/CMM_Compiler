@@ -411,7 +411,7 @@ void printInstruction(Instruction* instruction, FILE* output){
     else if(instruction->type == INST_JUMP){
         fprintf(output, "j %s\n", getArgString(instruction->arg1));
     }
-    else if(instruction->type == INST_ALLOCATE_ARRAY_INT || instruction->type == INST_ALLOCATE_ARRAY_VAR){
+    else if(instruction->type == INST_ALLOCATE_ARRAY_INT){
         //todo only allow ints
         char* type = ".word";
         if(instruction->arg1->dataType==CHAR){
@@ -448,7 +448,15 @@ void printInstruction(Instruction* instruction, FILE* output){
         fprintf(output, "li $v0 4\nsyscall\n");
     }
     else if(instruction->type == INST_WRITE_CHR){
-        fprintf(output, "lw $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
+        if(instruction->arg1->type==ARG_REGISTER){
+            fprintf(output, "move $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
+        }
+        else if(instruction->arg1->type==ARG_CHAR) {
+            fprintf(output, "li $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
+        }
+        else {
+            fprintf(output, "lw $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
+        }
     }
     else if(instruction->type == INST_WRITELN){
         fprintf(output, "addi $a0 $0 0xA \nli $v0 11 \nsyscall \n");
