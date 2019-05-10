@@ -4,7 +4,7 @@
 
 #include "codeGen.h"
 extern Env* mipsEnv;
-
+int globalStringCount = 0;
 
 Arg* getVariable(Arg* var, FILE* output){
     //prints instructions to file that get a variable from the .data section and places it in $a0
@@ -29,6 +29,14 @@ void loadRegisterValue(Arg* reg, Arg* value, FILE* output){
     }
     else if(value->type==ARG_VARIABLE){
         moveType = "la";
+    }
+    else if(value->type==ARG_STRING){
+        // save as a system string
+        fprintf(output, ".data \n___systemstring%i: .asciiz %s \n.text \n", globalStringCount, getArgString(value));
+        // use la to load the string
+        fprintf(output, "la %s ___systemstring%i\n", getArgString(reg), globalStringCount);
+        globalStringCount++;
+        return;
     }
     else{
         printf("load error\n");
@@ -150,15 +158,13 @@ void printInstruction(Instruction* instruction, FILE* output){
     }
     else if(instruction->type == INST_WRITE_STR){
         loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);
-        //todo
+        fprintf(output, "li $v0 4\nsyscall\n");
     }
     else if(instruction->type == INST_WRITE_CHR){
-        loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);
-        //todo
+        fprintf(output, "li $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
     }
     else if(instruction->type == INST_WRITELN){
         fprintf(output, "addi $a0 $0 0xA \nli $v0 11 \nsyscall \n");
-        //todo
     }
     else if(instruction->type == INST_READ){
         //todo

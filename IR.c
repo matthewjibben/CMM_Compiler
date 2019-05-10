@@ -746,7 +746,7 @@ char* cgenStatement(Statement* stmt){
                 appendInstruction(program, newInstruction(INST_WRITE_STR, value, NULL, NULL, NULL));
             }
             else if(stmt->expr->type==CHAR){
-                appendInstruction(program, newInstruction(INST_WRITE_STR, value, NULL, NULL, NULL));
+                appendInstruction(program, newInstruction(INST_WRITE_CHR, value, NULL, NULL, NULL));
             }
         }
         else if(stmt->type == STMT_WRITELN){
