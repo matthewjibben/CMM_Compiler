@@ -742,7 +742,7 @@ char* cgenStatement(Statement* stmt){
         }
         else if(stmt->type == STMT_WRITE){
             Arg* value = cgen(stmt->expr, 0);
-            if(stmt->expr->type==INT) {
+            if(stmt->expr->type==INT || stmt->expr->type==BOOL) {
                 appendInstruction(program, newInstruction(INST_WRITE_INT, value, NULL, NULL, NULL));
             }
             else if(stmt->expr->type==STRING){
@@ -757,8 +757,8 @@ char* cgenStatement(Statement* stmt){
 
         }
         else if(stmt->type == STMT_READ){
-            appendInstruction(program, newInstruction(INST_READ, NULL, NULL, NULL, NULL));
-
+            Arg* var = cgen(stmt->expr, 0);
+            appendInstruction(program, newInstruction(INST_READ, var, NULL, NULL, NULL));
         }
         stmt = stmt->next;
     }
@@ -980,6 +980,10 @@ bool propagateCostant(Arg* var, Arg* value, Instruction* head, Instruction* tail
         }
         if(isAssign(current) && areArgsEqual(current->arg1, var)){
             // the variable is reassigned to a new value, stop constant propagation
+            break;
+        }
+        if(current->type == INST_READ && areArgsEqual(current->arg1, var)){
+            // the variable is reassigned to a new value from user input, stop constant propagation
             break;
         }
         current = current->next;

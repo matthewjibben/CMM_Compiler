@@ -54,7 +54,7 @@ int buildString(int i, string j){
     int h = 0;
     int myfunc=10;
     myfunc(1, "asdf", "a");
-    while(h<i){
+    while(h<6){
         h = h+1;
         write h;
         write "asd";
@@ -78,7 +78,7 @@ if(z == 10){
 
 {}
 char getChar(int type){
-    if(type > 0){
+    if(1 > 0){
         return "a";
     } else {
         return "b";

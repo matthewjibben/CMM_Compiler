@@ -73,7 +73,7 @@ void loadRegisterValue(Arg* reg, Arg* value, FILE* output){
 
 void setVarValue(Arg* var, Arg* value, FILE* output){
     // given a variable that is already defined, get the address and change the value
-    if(var->dataType==INT || var->dataType==BOOL) {
+    if(var->dataType==INT || var->dataType==BOOL || var->dataType==CHAR) {
         char* moveType;
         if(value->type==ARG_VALUE){
             moveType = "li";
@@ -420,13 +420,19 @@ void printInstruction(Instruction* instruction, FILE* output){
         fprintf(output, "li $v0 4\nsyscall\n");
     }
     else if(instruction->type == INST_WRITE_CHR){
-        fprintf(output, "li $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
+        fprintf(output, "lw $a0 %s\nli $v0 11 \nsyscall \n", getArgString(instruction->arg1));
     }
     else if(instruction->type == INST_WRITELN){
         fprintf(output, "addi $a0 $0 0xA \nli $v0 11 \nsyscall \n");
     }
     else if(instruction->type == INST_READ){
-        //todo
+        if(instruction->arg1->dataType==INT || instruction->arg1->dataType==BOOL){
+            fprintf(output, "li $v0 5 \nsyscall \n");
+        }
+        else if(instruction->arg1->dataType==CHAR) {
+            fprintf(output, "li $v0 12 \nsyscall \n");
+        }
+        setVarValue(instruction->arg1, newArg(ARG_REGISTER, 0, "v"), output);
     }
     else if(instruction->type == INST_FUNCCALL){
         fprintf(output, "jal %s\n", getArgString(instruction->arg1));
