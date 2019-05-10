@@ -400,15 +400,31 @@ void printInstruction(Instruction* instruction, FILE* output){
         fprintf(output, "j %s\n", getArgString(instruction->arg1));
     }
     else if(instruction->type == INST_ALLOCATE_ARRAY_INT || instruction->type == INST_ALLOCATE_ARRAY_VAR){
-        //todo
+        //todo only allow ints
+        char* type = ".word";
+        if(instruction->arg1->dataType==CHAR){
+            type = ".byte";
+        }
+        fprintf(output, ".data \n%s: %s 0", getArgString(instruction->arg1), type);
+        int size = instruction->arg2->value;
+        // print initial values for all items in the array
+        for(int i=0; i<size-1; ++i){
+            fprintf(output, ",0");
+        }
+        fprintf(output, "\n.text\n");
     }
     else if(instruction->type == INST_ASSIGN_LW){
         fprintf(output, "lw %s %s(%s)\n",
                 getArgString(instruction->arg1), getArgString(instruction->arg2), getArgString(instruction->arg3));
     }
     else if(instruction->type == INST_ASSIGN_SW){
+        char* swVal = getArgString(instruction->arg1);
+        if(instruction->arg1->type!=ARG_REGISTER){
+            fprintf(output, "li $v1 %s\n", swVal);
+            swVal = "$v1";
+        }
         fprintf(output, "sw %s %s(%s)\n",
-                getArgString(instruction->arg1), getArgString(instruction->arg2), getArgString(instruction->arg3));
+                swVal, getArgString(instruction->arg2), getArgString(instruction->arg3));
     }
     else if(instruction->type == INST_WRITE_INT){
         loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);

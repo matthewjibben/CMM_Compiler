@@ -210,7 +210,10 @@ Arg* getArrayCellValue(Expression* expr, int c){
 
     Arg* zero = newArg(ARG_VALUE, 0, NULL);
     Arg* value = newArg(ARG_REGISTER, c+1, "t");
-    appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
+    Instruction* getCellPointer = newInstruction(INST_ASSIGN_OP, cell, index, name, "+");
+    getCellPointer->gettingCellPointer = true;
+    appendInstruction(program, getCellPointer);
+
     appendInstruction(program, newInstruction(INST_ASSIGN_LW, value, zero, index, NULL));
     //use the lw instruction to get the value inside the cell
     return value;
@@ -692,10 +695,11 @@ char* cgenStatement(Statement* stmt){
                 //need to allocate the necessary size in the heap
                 //if it is a character array, that is the size in bytes (each character is one byte)
                 //any other type of array is the size * 4, since we use 32 bit integers or addresses
+                // UPDATE: since weare using the .data section, it is best just use the size as-is
                 int size = stmt->decl->size;
-                if(stmt->type != CHAR){
-                    size *= 4;
-                }
+//                if(stmt->type != CHAR){
+//                    size *= 4;
+//                }
                 //syscall 9 can be used to allocate in the heap, however this will only be done in MIPS
                 //in the IR, it is more compact to use the form "var = allocate(bytesize)"
                 if(stmt->decl->value==NULL) {

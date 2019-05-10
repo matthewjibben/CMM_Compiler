@@ -3,6 +3,7 @@ cmm:  cmm.l cmm.y tokens.h symboltable.c sample.cmm parser.c ast.h ast.c
 	flex cmm.l
 	cc -g -o cmm parser.c symboltable.c ast.c IR.c codeGen.c cmm.tab.c lex.yy.c -lm
 	./cmm
+	spim -asm -file code.asm
 	@make clean --silent
 
 clean: 
