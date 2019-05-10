@@ -288,6 +288,11 @@ Arg* cgen(Expression* expr, int c){
 
 
             Arg* varName = newArg(ARG_VARIABLE, 0, exprName);
+
+            //if the variable is a function parameter, replace it with its $s register
+            if(expr->isFuncParam){
+                varName = newArg(ARG_REGISTER, expr->paramIndex, "s");
+            }
             varName->dataType = expr->type;
 
             // if the value is unary negated, we need to convert to negative through multiplying by -1
@@ -612,9 +617,13 @@ char* cgenStatement(Statement* stmt){
                 appendInstruction(program, newInstruction(INST_ALLOCATE_SP, size, NULL, NULL, NULL));
 
                 Argument* temp = stmt->expr->args->head;
-                while(temp!=NULL){
-                    // todo instruction set parameter?
-                    //  for loop?
+                // loop through all of the parameters and set them to their corresponding $s register
+                Arg* saveVal;
+                for(int i=0; temp!=NULL; ++i){
+                    // get the current save register
+                    saveVal = newArg(ARG_REGISTER, i, "s");
+                    appendInstruction(program, newInstruction(INST_ASSIGN, saveVal, cgen(temp->expr, 0), NULL, NULL));
+
                     temp = temp->next;
                 }
                 appendInstruction(program, newInstruction(INST_FUNCCALL, funcLabel, NULL, NULL, NULL));

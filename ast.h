@@ -54,6 +54,9 @@ typedef struct Declaration{
     int returnType;                 // only used for function declarations
     bool hasReturn;                 // only used for function declaration semantic checks
 
+    bool isFuncParam;               // used in code generation so that parameter variables are set to $s registers
+    int paramIndex;                 // used in code generation to find which $s register to use
+
     struct Expression* value;        // this is the expression that is assigned to the variable
     struct Statement* codeBlock;    // used for function assignments
     struct ParamList* params;       // this is the list of parameters in a function declaration
@@ -127,6 +130,9 @@ typedef struct Expression{
 
     int envID;      // ID for the environment the variable was declared in.
                     // This is used in IR to differentiate variables with the same name in different envs
+
+    bool isFuncParam;               // used in code generation so that parameter variables are set to $s registers
+    int paramIndex;                 // used in code generation to find which $s register to use
 
 } Expression;
 

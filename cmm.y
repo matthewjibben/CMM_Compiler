@@ -204,11 +204,15 @@ FunDec			: Type ID LPAREN Params RPAREN
 				// add the parameters to the new environment
 				if($4 != NULL){
 					Param* temp = $4->head;
+					int i=0;
 					while(temp!=NULL){
 						// create a declaration of the parameter and add to the current scope
 						Declaration* paramDec = newDeclaration(temp->name, temp->isArray, temp->type, NULL, NULL, NULL, NULL, NULL);
+						paramDec->isFuncParam = true;
+						paramDec->paramIndex = i;
 						insertEntry(env, paramDec);
 						temp = temp->next;
+						i++;
 					}
 				}
 				}
@@ -502,6 +506,10 @@ Var			: ID
 				$$ = newExpression(idSymbol->decl->type, NULL, NULL, $1, NULL, NULL, NULL);
 				$$->isArray = idSymbol->decl->isArray;  //not really necessary because arrays must be called with an index
 				$$->envID = idSymbol->decl->envID;
+
+				$$->isFuncParam = idSymbol->decl->isFuncParam;
+				$$->paramIndex = idSymbol->decl->paramIndex;
+
 
 				}  //todo symboltable lookup
 			| ID LSQUARE Expr RSQUARE

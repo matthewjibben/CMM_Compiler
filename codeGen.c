@@ -97,14 +97,23 @@ void defineVar(Instruction* instruction, FILE* output){
     if(lookup(mipsEnv, arg)==NULL) {
         // if the variable does not exist in the environment, it should be added and declared in MIPS
         insertEntry(mipsEnv, newDeclaration(arg, false, instruction->arg1->dataType, NULL, NULL, NULL, NULL, NULL));
+
+        // if a variable is being set to a register, it must be done after the .data section
+        char* setVal = getArgString(instruction->arg2);
+        if(instruction->arg2->type==ARG_REGISTER){
+            setVal = "0";
+        }
         if(instruction->arg1->dataType==INT || instruction->arg1->dataType==BOOL) {
-            fprintf(output, ".data\n %s: .word %s\n.text\n", arg, getArgString(instruction->arg2));
+            fprintf(output, ".data\n %s: .word %s\n.text\n", arg, setVal);
         }
         else if(instruction->arg1->dataType==CHAR){
-            fprintf(output, ".data\n %s: .byte %s\n.text\n", arg, getArgString(instruction->arg2));
+            fprintf(output, ".data\n %s: .byte %s\n.text\n", arg, setVal);
         }
         else if(instruction->arg1->dataType==STRING){
-            fprintf(output, ".data\n %s: .asciiz %s\n.text\n", arg, getArgString(instruction->arg2));
+            fprintf(output, ".data\n %s: .asciiz %s\n.text\n", arg, setVal);
+        }
+        if(instruction->arg2->type==ARG_REGISTER){
+            setVarValue(instruction->arg1, instruction->arg2, output);
         }
     }
     else {
