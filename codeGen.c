@@ -18,6 +18,25 @@ Arg* getVarAddress(Arg* var, FILE* output){
     return newArg(ARG_REGISTER, 0, "a");    // return $a0
 }
 
+void loadRegisterValue(Arg* reg, Arg* value, FILE* output){
+    // given a register, set it to the given value
+    char* moveType = "";
+    if(value->type==ARG_VALUE || value->type==ARG_CHAR){
+        moveType = "li";
+    }
+    else if(value->type==ARG_REGISTER){
+        moveType = "move";
+    }
+    else if(value->type==ARG_VARIABLE){
+        moveType = "la";
+    }
+    else{
+        printf("load error\n");
+        return;
+    }
+    fprintf(output, "%s %s %s\n", moveType, getArgString(reg), getArgString(value));
+}
+
 void setVarValue(Arg* var, Arg* value, FILE* output){
     // given a variable that is already defined, get the address and change the value
     if(var->dataType==INT || var->dataType==BOOL) {
@@ -93,7 +112,7 @@ void printAssign(Instruction* instruction, FILE* output){
         defineVar(instruction, output);
     }
     else{
-        printf("other?\n");
+        printf("error\n");
     }
 }
 
@@ -101,8 +120,75 @@ void printInstruction(Instruction* instruction, FILE* output){
     if(instruction->type == INST_LABEL){
         fprintf(output, "%s%i:\n", instruction->arg1->name, instruction->arg1->value);
     }
-    if(instruction->type == INST_ASSIGN){
+    else if(instruction->type == INST_ASSIGN){
         printAssign(instruction, output);
+    }
+    else if(instruction->type == INST_ASSIGN_OP){
+        //todo
+    }
+    else if(instruction->type == INST_COND_JUMP){
+        fprintf(output, "%s %s %s\n", instruction->op, getArgString(instruction->arg1), getArgString(instruction->arg2));
+    }
+    else if(instruction->type == INST_JUMP){
+        fprintf(output, "j %s\n", getArgString(instruction->arg1));
+    }
+    else if(instruction->type == INST_ALLOCATE_ARRAY_INT || instruction->type == INST_ALLOCATE_ARRAY_VAR){
+        //todo
+    }
+    else if(instruction->type == INST_ASSIGN_LW){
+        fprintf(output, "lw %s %s(%s)\n",
+                getArgString(instruction->arg1), getArgString(instruction->arg2), getArgString(instruction->arg3));
+    }
+    else if(instruction->type == INST_ASSIGN_SW){
+        fprintf(output, "sw %s %s(%s)\n",
+                getArgString(instruction->arg1), getArgString(instruction->arg2), getArgString(instruction->arg3));
+    }
+    else if(instruction->type == INST_WRITE_INT){
+        loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);
+        loadRegisterValue(newArg(ARG_REGISTER, 0, "v"), newArg(ARG_VALUE, 1, NULL), output);
+        fprintf(output, "syscall\n");
+    }
+    else if(instruction->type == INST_WRITE_STR){
+        loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);
+        //todo
+    }
+    else if(instruction->type == INST_WRITE_CHR){
+        loadRegisterValue(newArg(ARG_REGISTER, 0, "a"), instruction->arg1, output);
+        //todo
+    }
+    else if(instruction->type == INST_WRITELN){
+        fprintf(output, "addi $a0 $0 0xA \nli $v0 11 \nsyscall \n");
+        //todo
+    }
+    else if(instruction->type == INST_READ){
+        //todo
+    }
+    else if(instruction->type == INST_FUNCCALL){
+        //todo
+    }
+    else if(instruction->type == INST_DOT_ENT){
+        fprintf(output, ".ent %s\n", getArgString(instruction->arg1));
+    }
+    else if(instruction->type == INST_DOT_END){
+        fprintf(output, ".end %s\n", getArgString(instruction->arg1));
+    }
+    else if(instruction->type == INST_JR_RA){
+        fprintf(output, "jr $ra\n");
+    }
+    else if(instruction->type == INST_START_FUNC){
+        //todo allocate stack and save $ra
+    }
+    else if(instruction->type == INST_END_FUNC){
+        //todo deallocate stack and save $ra
+    }
+    else if(instruction->type == INST_ALLOCATE_SP){
+        //todo
+    }
+    else if(instruction->type == INST_FREE_SP){
+        //todo
+    }
+    else {
+        printf("error??\n");
     }
 }
 

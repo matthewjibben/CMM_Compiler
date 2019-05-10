@@ -613,6 +613,8 @@ char* cgenStatement(Statement* stmt){
                 }
                 appendInstruction(program, newInstruction(INST_FUNCCALL, funcLabel, NULL, NULL, NULL));
 
+                appendInstruction(program, newInstruction(INST_FREE_SP, size, NULL, NULL, NULL));
+
                 //todo restore all "s" registers and $ra from the stack in MIPS
                 //loadRegistersStack();
             }
@@ -739,14 +741,17 @@ char* cgenStatement(Statement* stmt){
             Arg* value = cgen(stmt->expr, 0);
             if(stmt->expr->type==INT) {
                 appendInstruction(program, newInstruction(INST_WRITE_INT, value, NULL, NULL, NULL));
-            } else{
+            }
+            else if(stmt->expr->type==STRING){
+                appendInstruction(program, newInstruction(INST_WRITE_STR, value, NULL, NULL, NULL));
+            }
+            else if(stmt->expr->type==CHAR){
                 appendInstruction(program, newInstruction(INST_WRITE_STR, value, NULL, NULL, NULL));
             }
         }
         else if(stmt->type == STMT_WRITELN){
-            // todo a system string will always exist in the data segment with this name _NEWLINE0
-            Arg* value = newArg(ARG_LABEL, 0, "_NEWLINE");
-            appendInstruction(program, newInstruction(INST_WRITE_STR, value, NULL, NULL, NULL));
+            appendInstruction(program, newInstruction(INST_WRITELN, NULL, NULL, NULL, NULL));
+
         }
         else if(stmt->type == STMT_READ){
             appendInstruction(program, newInstruction(INST_READ, NULL, NULL, NULL, NULL));
