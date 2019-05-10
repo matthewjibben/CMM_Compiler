@@ -151,11 +151,14 @@ void printAssign(Instruction* instruction, FILE* output){
         Arg* getvar = getVariable(instruction->arg2, output);
         fprintf(output, "move %s %s\n", getArgString(instruction->arg1), getArgString(getvar));
     }
+    else if(instruction->arg1->type == ARG_REGISTER && instruction->arg2->type == ARG_STRING) {
+        loadRegisterValue(instruction->arg1, instruction->arg2, output);
+    }
     else if(instruction->arg1->type == ARG_VARIABLE){
         defineVar(instruction, output);
     }
     else{
-        printf("error\n");
+        printf("error?\n");
     }
 }
 
