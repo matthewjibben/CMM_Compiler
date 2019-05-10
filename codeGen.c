@@ -6,10 +6,10 @@
 extern Env* mipsEnv;
 int globalStringCount = 0;
 
-Arg* getVariable(Arg* var, FILE* output){
+Arg* getVariable(Arg* var, int i, FILE* output){
     //prints instructions to file that get a variable from the .data section and places it in $a0
-    fprintf(output, "la $a0 %s\nlw $a0 0($a0)\n", getArgString(var));
-    return newArg(ARG_REGISTER, 0, "a");    // return $a0
+    fprintf(output, "la $a%i %s\nlw $a%i 0($a%i)\n", i, getArgString(var), i, i);
+    return newArg(ARG_REGISTER, i, "a");    // return $a0
 }
 
 Arg* getVarAddress(Arg* var, FILE* output){
@@ -148,7 +148,7 @@ void printAssign(Instruction* instruction, FILE* output){
         fprintf(output, "li %s %s\n", getArgString(instruction->arg1), getArgString(instruction->arg2));
     }
     else if(instruction->arg1->type == ARG_REGISTER && instruction->arg2->type == ARG_VARIABLE) {
-        Arg* getvar = getVariable(instruction->arg2, output);
+        Arg* getvar = getVariable(instruction->arg2,0, output);
         fprintf(output, "move %s %s\n", getArgString(instruction->arg1), getArgString(getvar));
     }
     else if(instruction->arg1->type == ARG_REGISTER && instruction->arg2->type == ARG_STRING) {
@@ -176,7 +176,7 @@ void printAssignOp(Instruction* instruction, FILE* output){
                 arg2name = getArgString(getVarAddress(instruction->arg2, output));
             }
             else {
-                arg2name = getArgString(getVariable(instruction->arg2, output));
+                arg2name = getArgString(getVariable(instruction->arg2,0, output));
             }
         } else {
             arg2name = getArgString(instruction->arg2);
@@ -187,7 +187,7 @@ void printAssignOp(Instruction* instruction, FILE* output){
                 arg3name = getArgString(getVarAddress(instruction->arg3, output));
             }
             else {
-                arg3name = getArgString(getVariable(instruction->arg3, output));
+                arg3name = getArgString(getVariable(instruction->arg3,1, output));
             }
         } else {
             arg3name = getArgString(instruction->arg3);
@@ -204,12 +204,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "-")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -226,12 +226,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "*")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -247,12 +247,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "/")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -269,12 +269,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "==")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -290,12 +290,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "!=")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -311,12 +311,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, ">")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -332,12 +332,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "<")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -353,12 +353,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, ">=")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -374,12 +374,12 @@ void printAssignOp(Instruction* instruction, FILE* output){
     }
     else if(strcmp(instruction->op, "<=")==0){
         if(instruction->arg2->type==ARG_VARIABLE){
-            arg2name = getArgString(getVariable(instruction->arg2, output));
+            arg2name = getArgString(getVariable(instruction->arg2,0, output));
         } else {
             arg2name = getArgString(instruction->arg2);
         }
         if(instruction->arg3->type==ARG_VARIABLE){
-            arg3name = getArgString(getVariable(instruction->arg3, output));
+            arg3name = getArgString(getVariable(instruction->arg3,1, output));
         } else {
             arg3name = getArgString(instruction->arg3);
         }
@@ -406,7 +406,15 @@ void printInstruction(Instruction* instruction, FILE* output){
         printAssignOp(instruction, output);
     }
     else if(instruction->type == INST_COND_JUMP){
-        fprintf(output, "%s %s %s\n", instruction->op, getArgString(instruction->arg1), getArgString(instruction->arg2));
+        if(instruction->arg1->type!=ARG_REGISTER){
+            Arg* reg = newArg(ARG_REGISTER, 1, "v");
+            loadRegisterValue(reg, instruction->arg1, output);
+            fprintf(output, "%s $v1 %s\n", instruction->op, getArgString(instruction->arg2));
+        }
+        else {
+            fprintf(output, "%s %s %s\n", instruction->op, getArgString(instruction->arg1),
+                    getArgString(instruction->arg2));
+        }
     }
     else if(instruction->type == INST_JUMP){
         fprintf(output, "j %s\n", getArgString(instruction->arg1));
