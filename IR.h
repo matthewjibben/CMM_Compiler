@@ -69,6 +69,8 @@ typedef struct Instruction {
     char* op;
     struct Instruction* next;
     struct Instruction* prev;
+
+    bool gettingCellPointer;
 } Instruction;
 
 

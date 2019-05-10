@@ -242,7 +242,9 @@ Arg* getArrayCell(Expression* expr, int c){
     Arg* name = newArg(ARG_VARIABLE, 0, exprName);
     name->dataType = expr->type;
 
-    appendInstruction(program, newInstruction(INST_ASSIGN_OP, cell, index, name, "+"));
+    Instruction* getCellPointer = newInstruction(INST_ASSIGN_OP, cell, index, name, "+");
+    getCellPointer->gettingCellPointer = true;
+    appendInstruction(program, getCellPointer);
     return cell;
 }
 
@@ -437,45 +439,45 @@ Arg* cgen(Expression* expr, int c){
     }
 }
 
-void saveRegistersStack(){
-    //todo this will only be done in the code generation.
-
-    // save all "s" registers and $ra on the stack safely can safely be overwritten
-    Arg* allRegs = newArg(ARG_VALUE, 36, NULL); // allocate enough space for all $s and $ra
-    appendInstruction(program, newInstruction(INST_ALLOCATE_SP, allRegs, NULL, NULL, NULL));
-    Arg* sp = newArg(ARG_SP, 0, "sp");
-
-
-    for(int i=0; i<8; ++i) {
-        Arg* sCurrent = newArg(ARG_REGISTER, i, "s");
-        Arg* currentLoc = newArg(ARG_VALUE, i*4, NULL);
-        appendInstruction(program, newInstruction(INST_ASSIGN_SW, sCurrent, currentLoc, sp, NULL));
-    }
-    //finally save $ra
-    Arg* ra = newArg(ARG_RA, 0, "ra");
-    Arg* currentLoc = newArg(ARG_VALUE, 32, NULL);
-    appendInstruction(program, newInstruction(INST_ASSIGN_SW, ra, currentLoc, sp, NULL));
-}
-
-void loadRegistersStack(){
-    //todo this will only be done in the code generation.
-
-    // reload all of the saved registers and free the space on the stack
-    Arg* sp = newArg(ARG_SP, 0, "sp");
-    for(int i=0; i<8; ++i) {
-        Arg* sCurrent = newArg(ARG_REGISTER, i, "s");
-        Arg* currentLoc = newArg(ARG_VALUE, i*4, NULL);
-        appendInstruction(program, newInstruction(INST_ASSIGN_LW, sCurrent, currentLoc, sp, NULL));
-    }
-    //finally save $ra
-    Arg* ra = newArg(ARG_RA, 0, "ra");
-    Arg* currentLoc = newArg(ARG_VALUE, 32, NULL);
-    appendInstruction(program, newInstruction(INST_ASSIGN_LW, ra, currentLoc, sp, NULL));
-
-    // free the space that was allocated on the stack
-    Arg* allRegs = newArg(ARG_VALUE, 36, NULL); // free the space for all $s and $ra
-    appendInstruction(program, newInstruction(INST_FREE_SP, allRegs, NULL, NULL, NULL));
-}
+//void saveRegistersStack(){
+//    //todo this will only be done in the code generation.
+//
+//    // save all "s" registers and $ra on the stack safely can safely be overwritten
+//    Arg* allRegs = newArg(ARG_VALUE, 36, NULL); // allocate enough space for all $s and $ra
+//    appendInstruction(program, newInstruction(INST_ALLOCATE_SP, allRegs, NULL, NULL, NULL));
+//    Arg* sp = newArg(ARG_SP, 0, "sp");
+//
+//
+//    for(int i=0; i<8; ++i) {
+//        Arg* sCurrent = newArg(ARG_REGISTER, i, "s");
+//        Arg* currentLoc = newArg(ARG_VALUE, i*4, NULL);
+//        appendInstruction(program, newInstruction(INST_ASSIGN_SW, sCurrent, currentLoc, sp, NULL));
+//    }
+//    //finally save $ra
+//    Arg* ra = newArg(ARG_RA, 0, "ra");
+//    Arg* currentLoc = newArg(ARG_VALUE, 32, NULL);
+//    appendInstruction(program, newInstruction(INST_ASSIGN_SW, ra, currentLoc, sp, NULL));
+//}
+//
+//void loadRegistersStack(){
+//    //todo this will only be done in the code generation.
+//
+//    // reload all of the saved registers and free the space on the stack
+//    Arg* sp = newArg(ARG_SP, 0, "sp");
+//    for(int i=0; i<8; ++i) {
+//        Arg* sCurrent = newArg(ARG_REGISTER, i, "s");
+//        Arg* currentLoc = newArg(ARG_VALUE, i*4, NULL);
+//        appendInstruction(program, newInstruction(INST_ASSIGN_LW, sCurrent, currentLoc, sp, NULL));
+//    }
+//    //finally save $ra
+//    Arg* ra = newArg(ARG_RA, 0, "ra");
+//    Arg* currentLoc = newArg(ARG_VALUE, 32, NULL);
+//    appendInstruction(program, newInstruction(INST_ASSIGN_LW, ra, currentLoc, sp, NULL));
+//
+//    // free the space that was allocated on the stack
+//    Arg* allRegs = newArg(ARG_VALUE, 36, NULL); // free the space for all $s and $ra
+//    appendInstruction(program, newInstruction(INST_FREE_SP, allRegs, NULL, NULL, NULL));
+//}
 
 
 
@@ -608,7 +610,8 @@ char* cgenStatement(Statement* stmt){
 
                 Argument* temp = stmt->expr->args->head;
                 while(temp!=NULL){
-
+                    // todo instruction set parameter?
+                    //  for loop?
                     temp = temp->next;
                 }
                 appendInstruction(program, newInstruction(INST_FUNCCALL, funcLabel, NULL, NULL, NULL));

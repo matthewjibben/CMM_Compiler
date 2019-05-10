@@ -18,6 +18,25 @@ Arg* getVarAddress(Arg* var, FILE* output){
     return newArg(ARG_REGISTER, 0, "a");    // return $a0
 }
 
+
+void saveRegistersStack(FILE* output){
+    //first allocate space on the stack
+    fprintf(output, "addi $sp $sp -36\n");
+    // save all $s registers
+    fprintf(output, "sw $s0 0($sp)\nsw $s1 -4($sp)\nsw $s2 -8($sp)\nsw $s3 -12($sp)\nsw $s4 -16($sp)\nsw $s5 -20($sp)\nsw $s6 -24($sp)\nsw $s7 -28($sp)\n");
+    // on the last index, save $ra
+    fprintf(output, "sw $ra -32($sp)\n");
+}
+
+void loadRegistersStack(FILE* output) {
+    // reload all $s registers
+    fprintf(output, "lw $s0 0($sp)\nlw $s1 -4($sp)\nlw $s2 -8($sp)\nlw $s3 -12($sp)\nlw $s4 -16($sp)\nlw $s5 -20($sp)\nlw $s6 -24($sp)\nlw $s7 -28($sp)\n");
+    // reload $ra
+    fprintf(output, "lw $ra -32($sp)\n");
+    // deallocate stack
+    fprintf(output, "addi $sp $sp 36\n");
+}
+
 void loadRegisterValue(Arg* reg, Arg* value, FILE* output){
     // given a register, set it to the given value
     char* moveType = "";
@@ -28,7 +47,14 @@ void loadRegisterValue(Arg* reg, Arg* value, FILE* output){
         moveType = "move";
     }
     else if(value->type==ARG_VARIABLE){
-        moveType = "la";
+        if(value->dataType!=STRING){
+            fprintf(output, "la %s %s\n", getArgString(reg), getArgString(value));
+            fprintf(output, "lw %s 0(%s)\n", getArgString(reg), getArgString(reg));
+            return;
+        }
+        else {
+            moveType = "la";
+        }
     }
     else if(value->type==ARG_STRING){
         // save as a system string
@@ -124,6 +150,239 @@ void printAssign(Instruction* instruction, FILE* output){
     }
 }
 
+void printAssignOp(Instruction* instruction, FILE* output){
+    if(instruction->type!=INST_ASSIGN_OP){exit(1);}
+    //create each instruction based on the type of operation
+    // due to optimization, there will never be adding two int values
+    char* assignVal = getArgString(instruction->arg1);
+    char* arg2name;
+    char* arg3name;
+    if(strcmp(instruction->op, "+")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            // if we are getting the address of the variable on purpose, generate code to get the address
+            if(instruction->gettingCellPointer){
+                arg2name = getArgString(getVarAddress(instruction->arg2, output));
+            }
+            else {
+                arg2name = getArgString(getVariable(instruction->arg2, output));
+            }
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            // if we are getting the address of the variable on purpose, generate code to get the address
+            if(instruction->gettingCellPointer){
+                arg3name = getArgString(getVarAddress(instruction->arg3, output));
+            }
+            else {
+                arg3name = getArgString(getVariable(instruction->arg3, output));
+            }
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "add %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "add %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "-")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, we must use another register
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "li $v1 %s\n", arg2name);
+            fprintf(output, "sub %s $v1 %s\n", assignVal, arg3name);
+        }
+        else {
+            fprintf(output, "sub %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "*")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "mul %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "mul %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "/")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, we must use another register
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "li $v1 %s\n", arg2name);
+            fprintf(output, "div %s $v1 %s\n", assignVal, arg3name);
+        }
+        else {
+            fprintf(output, "div %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "==")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "seq %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "seq %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "!=")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 +3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "snq %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "snq %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, ">")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 + 3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "sle %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "sgt %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "<")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 + 3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "sge %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "slt %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, ">=")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 + 3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "slt %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "sge %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+    else if(strcmp(instruction->op, "<=")==0){
+        if(instruction->arg2->type==ARG_VARIABLE){
+            arg2name = getArgString(getVariable(instruction->arg2, output));
+        } else {
+            arg2name = getArgString(instruction->arg2);
+        }
+        if(instruction->arg3->type==ARG_VARIABLE){
+            arg3name = getArgString(getVariable(instruction->arg3, output));
+        } else {
+            arg3name = getArgString(instruction->arg3);
+        }
+
+        // MIPS allows adding like "$a0 + 3" but not "3 + $a0"
+        // if the integer value comes first, move it to the second arg
+        if(instruction->arg2->type==ARG_VALUE){
+            fprintf(output, "sgt %s %s %s\n", assignVal, arg3name, arg2name);
+        }
+        else {
+            fprintf(output, "sle %s %s %s\n", assignVal, arg2name, arg3name);
+        }
+    }
+}
+
 void printInstruction(Instruction* instruction, FILE* output){
     if(instruction->type == INST_LABEL){
         fprintf(output, "%s%i:\n", instruction->arg1->name, instruction->arg1->value);
@@ -132,7 +391,7 @@ void printInstruction(Instruction* instruction, FILE* output){
         printAssign(instruction, output);
     }
     else if(instruction->type == INST_ASSIGN_OP){
-        //todo
+        printAssignOp(instruction, output);
     }
     else if(instruction->type == INST_COND_JUMP){
         fprintf(output, "%s %s %s\n", instruction->op, getArgString(instruction->arg1), getArgString(instruction->arg2));
@@ -170,7 +429,7 @@ void printInstruction(Instruction* instruction, FILE* output){
         //todo
     }
     else if(instruction->type == INST_FUNCCALL){
-        //todo
+        fprintf(output, "jal %s\n", getArgString(instruction->arg1));
     }
     else if(instruction->type == INST_DOT_ENT){
         fprintf(output, ".ent %s\n", getArgString(instruction->arg1));
@@ -182,16 +441,16 @@ void printInstruction(Instruction* instruction, FILE* output){
         fprintf(output, "jr $ra\n");
     }
     else if(instruction->type == INST_START_FUNC){
-        //todo allocate stack and save $ra
+        //unneeded
     }
     else if(instruction->type == INST_END_FUNC){
-        //todo deallocate stack and save $ra
+        //unneeded
     }
     else if(instruction->type == INST_ALLOCATE_SP){
-        //todo
+        saveRegistersStack(output);
     }
     else if(instruction->type == INST_FREE_SP){
-        //todo
+        loadRegistersStack(output);
     }
     else {
         printf("error??\n");
